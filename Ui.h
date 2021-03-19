@@ -121,6 +121,7 @@ class UIMgr
     Task2Do ProcessKeys();
     void Invalidate();
     bool IsActiveAlarm();
+    bool IsAnyAlarm();
     bool Beep();
     void WaitKeyUp();
   protected:

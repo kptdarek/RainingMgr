@@ -283,7 +283,7 @@ void DoMainMenu()
   switch (index)
   {
     case 0:
-      if (ui.IsActiveAlarm()) ui.CheckAlarms();
+      if (ui.IsAnyAlarm()) ui.CheckAlarms();
       break;
     case 1:
       ui.ShowStatus();

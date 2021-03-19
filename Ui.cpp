@@ -786,6 +786,15 @@ bool UIMgr::IsActiveAlarm()
   return false;
 }
 
+bool UIMgr::IsAnyAlarm()
+{
+  for (int i = 0 ; i < ALARM_SIZE; i++)
+  {
+    if (Alarms[i].msg) return true;
+  }
+  return false;
+}
+
 byte  UIMgr::currAlarmIndex(const __FlashStringHelper* title)
 {
   for (int i = 0 ; i < ALARM_SIZE; i++)

@@ -1,0 +1,2 @@
+# RainingMgr
+ Sterownik deszczowania antyprzymrozkowego

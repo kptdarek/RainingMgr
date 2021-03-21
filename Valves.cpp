@@ -148,7 +148,7 @@ void Valves::ResetTime()
 
 void  Valves::SetFlow(byte flow)
 {
-  unsigned long seconds = (millis() EXTRA_MILLIS) / 1000;
+   long seconds = (millis() EXTRA_MILLIS) / 1000l;
 
   if (fixedMode && IsNO() && flow > 0)
   {

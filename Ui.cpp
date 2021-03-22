@@ -812,7 +812,7 @@ void UIMgr::AddAlarm(const __FlashStringHelper* title, byte flags)
   byte exist = currAlarmIndex(title);
   if (exist != 255)
   {
-    if (Alarms[exist].cnt < 98)
+    if (Alarms[exist].cnt < 99)
     {
       Alarms[exist].cnt ++;
     }

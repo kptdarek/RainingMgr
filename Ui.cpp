@@ -136,15 +136,6 @@ void UIMgr::Setup(Valves* v)
   valves = v;
 }
 
-void UIMgr::LastShowCursor(bool show)
-{
-  if (show)
-  {
-    lcd.setCursor(0, 1);
-    lcd.blink();
-  }
-}
-
 void UIMgr::SetTemperature(double t, Termometr instance, bool showTrend)
 {
   char trend = ' ';
@@ -249,7 +240,7 @@ void UIMgr::SetFlow(byte value, FlowType type)
   }
 }
 
-void UIMgr::SetPowerPrecent(byte value)
+void UIMgr::SetPowerPrecent(byte value, bool halfAuto)
 {
   if (value != lastPowerPrecent)
   {
@@ -258,11 +249,28 @@ void UIMgr::SetPowerPrecent(byte value)
     lcd.print(F("    "));
     lcd.setCursor(0, 1);
     if (value > VALES_FIX) lcd.print(F("#"));
-    lcd.print(value % 101);
-    lcd.print(F("%"));
+    byte v = value % 101;
+    if (halfAuto)
+    {
+      switch (v)
+      {
+        case 0:
+          lcd.print(F("ZERO"));
+          break;
+        case 100:
+          lcd.print(F("FULL"));
+          break;
+        default:
+          lcd.print(F("["));
+          lcd.print(v);
+          lcd.print(F("%]"));
+      };
+    } else {
+      lcd.print(v);
+      lcd.print(F("%"));
+    }
   }
 }
-
 
 Task2Do UIMgr::ProcessKeys()
 {
@@ -755,7 +763,6 @@ byte UIMgr::GetlastActiveAlarm()
 
 void UIMgr::ShowLastAlarm(bool show)
 {
-  lcd.noBlink();
   bool on = (IsActiveAlarm() && show);
   if (on != alarmShowMode)
   {
@@ -864,12 +871,12 @@ lcd.print(F(" R"));
   lcd.print(cfg.ValMaxWorkMin);
   lcd.print(F("!"));
   lcd.print(cfg.Alarms, 2);
-  
+
   lcd.setCursor(0, 1);
   lcd.print((millis() EXTRA_MILLIS) / 1000 / 60 / 60);
   lcd.print(F(":"));
   lcd.print((millis() EXTRA_MILLIS) / 1000 / 60 % 60);
-  
+
 
   lcd.print(F(" "));
   lcd.print(Config::GetTotalWater());

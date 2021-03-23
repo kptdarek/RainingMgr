@@ -476,11 +476,9 @@ void loop()
 
   valves.Adjust();
   int powerPrec = valves.PowerInMode();
-  ui.SetPowerPrecent(powerPrec);
+  ui.SetPowerPrecent(powerPrec, Config::Get().HalfAutomaticMode);
   ui.Pulse((mils / 1000) % 2 == 0, currentMode);
 
-
-  ui.LastShowCursor(Config::Get().HalfAutomaticMode);
   delay(250);
 }
 

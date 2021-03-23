@@ -97,7 +97,7 @@ class UIMgr
     void SetTemperature(double t, Termometr instance, bool showTrend = true);
     void SetTime(unsigned long timeFrom24, bool saveHisotry = true);
     void SetFlow(byte value, FlowType type);
-    void SetPowerPrecent(byte value);
+    void SetPowerPrecent(byte value, bool halfAuto = false);
     int Menu(const __FlashStringHelper* title, const __FlashStringHelper* items[], int cnt, int currIndex = 0);
     int SetValue(const __FlashStringHelper* title, int old, int change = 1);
     bool SetValue(const __FlashStringHelper* title, bool old);
@@ -105,8 +105,7 @@ class UIMgr
     float SetValue(const __FlashStringHelper* title, float old, float change = 0.1f);
     void Pulse(bool v, WorkMode mode);
     void Print(const __FlashStringHelper* title, byte line = 0);
-    void Print(int i);
-    void LastShowCursor(bool show);
+    void Print(int i); 
     void ShowStatus();
     void Cls();
     void ShowMode(WorkMode mode);

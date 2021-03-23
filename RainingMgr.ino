@@ -36,7 +36,7 @@ void setup()
 
   if (cfg.Go25Temp + cfg.DelayStop < cfg.AntiFrezTemp)
   {
-      ui.AddAlarm(F("Za male opoz.wy."), ALARM_INFO);    
+    ui.AddAlarm(F("Za male opoz.wy."), ALARM_INFO);
   }
 
   if (cfg.Sensors > 0 && cfg.Sensors <= 1 + dynaSensors1.Count())
@@ -224,7 +224,7 @@ void DoAlarmsMenu()
 
 void DoSettingsMenu()
 {
-  const __FlashStringHelper* items[] = {F("Alarmy"),F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Max min cewki"),  F("Zapisz"), F("Przywroc"), F("Zeruj liczn."), F("Reset")};
+  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Max min cewki"),  F("Zapisz"), F("Przywroc"), F("Zeruj liczn."), F("Reset")};
   int index;
   do {
     index = ui.Menu(F("Ustawienia"), items, sizeof(items) / sizeof(__FlashStringHelper*));
@@ -232,7 +232,7 @@ void DoSettingsMenu()
     Configuration& cfg = Config::Get();
     switch (index)
     {
-       case 0:
+      case 0:
         DoAlarmsMenu();
         break;
       case 1:
@@ -249,7 +249,7 @@ void DoSettingsMenu()
         break;
       case 5:
         cfg.ValMaxWorkMin = ui.SetValue(items[index], cfg.ValMaxWorkMin);//TODO zmienic na 5
-        break;     
+        break;
       case 6:
         Config::Save();//ok
         break;
@@ -277,7 +277,7 @@ void DoFixedMode()
 
 void DoMainMenu()
 {
-  const __FlashStringHelper* items[] = {F("Alarmy"), F("Status"), F("Opoz kwitnien"), F("Pol automat"), F("Hisoria"), F("Testy"), F("Ustawienia"), F("#FIX Bajp/Zamk")};
+  const __FlashStringHelper* items[] = {F("Alarmy"), F("Status"), F("Hisoria"), F("Opoz kwitnien"), F("Pol automat"), F("Ustawienia"),  F("Testy"),  F("#FIX Bajp/Zamk")};
   int index = ui.Menu(F("Meni glowne"), items, sizeof(items) / sizeof(__FlashStringHelper*) -  (valves.CanSetFixedMode() ? 0 : 1));
 
   switch (index)
@@ -289,19 +289,19 @@ void DoMainMenu()
       ui.ShowStatus();
       break;
     case 2:
-      SetMode(WmDeleayFolowering);
-      break;
-    case 3:
-      DoHalfAutoMode(items[index]);
-      break;
-    case 4:
       ui.History();
       break;
+    case 3:
+      SetMode(WmDeleayFolowering);
+      break;
+    case 4:
+      DoHalfAutoMode(items[index]);
+      break;
     case 5:
-      DoTestMenu();
+      DoSettingsMenu();
       break;
     case 6:
-      DoSettingsMenu();
+      DoTestMenu();
       break;
     case 7:
       DoFixedMode();
@@ -341,7 +341,7 @@ void PressSmartKey()
     return;
   }
 
-   ui.ShowStatus();
+  ui.ShowStatus();
 }
 
 void loop()
@@ -542,14 +542,14 @@ void CheckAntiFreezMode(double t1, double t2, bool halfAuto)
         ui.AddAlarm(F("Wlaczony 100%"), ALARM_INFO);
       }
     }
-    
+
     valves.SetMode(newMode);
-    
+
     if (lastMode == Val25 && valves.CanSetFixedMode()) // nie zadziała jak opróźnienie wyłaczenia jest mniejsze niż antyfreez generalnie przy wyłaczaniu nie ma antyfreez
     {
-         ui.AddAlarm(F("Zalecany FIX #0%"), ALARM_INFO);
+      ui.AddAlarm(F("Zalecany FIX #0%"), ALARM_INFO);
     }
-    
+
     lastMode = m;
   }
 }

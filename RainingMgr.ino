@@ -351,6 +351,7 @@ void loop()
   static long avrFlowSum = 0;
   static int avrFlowSamples = 0;
   static unsigned long lastChekAvrFlowMillis = 0 ;
+  static byte t2RetryCnt = 0;
   Configuration& cfg = Config::Get();
   iter++;
   sensors->RequestTemps();
@@ -461,17 +462,22 @@ void loop()
     SetMode(cfg.HalfAutomaticMode ? WmAntiFreezHalfAuto : WmAntiFreez);
   }
 
-  switch (currentMode)
+  if (IsOk(t2) || ((t2RetryCnt++) >= 40))
   {
-    case WmDeleayFolowering:
-      CheckDelayFlowMode(t1, t2);
-      break;
-    case   WmAntiFreez:
-      CheckAntiFreezMode(t1, t2, false);
-      break;
-    case WmAntiFreezHalfAuto:
-      CheckAntiFreezMode(t1, t2, true);
-      break;
+    switch (currentMode)
+    {
+      case WmDeleayFolowering:
+        CheckDelayFlowMode(t1, t2);
+        break;
+      case   WmAntiFreez:
+        CheckAntiFreezMode(t1, t2, false);
+        break;
+      case WmAntiFreezHalfAuto:
+        CheckAntiFreezMode(t1, t2, true);
+        break;
+    }
+
+    t2RetryCnt = 0;
   }
 
   valves.Adjust();

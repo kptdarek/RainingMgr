@@ -532,16 +532,19 @@ void CheckAntiFreezMode(double t1, double t2, bool halfAuto)
       m = mG;
     }
 
+    ValMode newMode = m;
+
     if (halfAuto)
     {
-      if (m == Val75 || m == Val50 || m == Val25) m = Val100;
-      if (lastMode == ValAntiFreeze && m == Val100)
+      if (m == Val75 || m == Val50 || m == Val25) newMode = Val100;
+      if (lastMode == ValAntiFreeze && newMode == Val100)
       {
         ui.AddAlarm(F("Wlaczony 100%"), ALARM_INFO);
       }
     }
     
-    valves.SetMode(m);
+    valves.SetMode(newMode);
+    
     if (lastMode == Val25 && valves.CanSetFixedMode()) // nie zadziała jak opróźnienie wyłaczenia jest mniejsze niż antyfreez generalnie przy wyłaczaniu nie ma antyfreez
     {
          ui.AddAlarm(F("Zalecany FIX #0%"), ALARM_INFO);

@@ -455,11 +455,17 @@ void loop()
     }
   } //~ onece a seconds
 
-  //automatic antifreez mode
-  if ((t1 < 3.0 && t1 > -20.0) || (t2 < 3.0 && t2 > -20.0))
+
+  if (currentMode == WmAntiFreez || currentMode == WmAntiFreezHalfAuto)
   {
-    // valves.SetMode(ValZero); // ??? po co to ....
-    SetMode(cfg.HalfAutomaticMode ? WmAntiFreezHalfAuto : WmAntiFreez);
+    if ( t1 >= 5.0 && t2 >= 5.0) SetMode(WmNone);
+  } else
+  {
+    //automatic antifreez mode
+    if ((t1 < 3.0 && t1 > -20.0) || (t2 < 3.0 && t2 > -20.0))
+    {
+      SetMode(cfg.HalfAutomaticMode ? WmAntiFreezHalfAuto : WmAntiFreez);
+    }
   }
 
   if (IsOk(t2) || ((t2RetryCnt++) >= 40))

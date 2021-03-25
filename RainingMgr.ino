@@ -255,9 +255,11 @@ void DoSettingsMenu()
         break;
       case 7:
         Config::Init();
+        break;
       case 8:
         Config::SetTotalWater(0);
         totalWaterAll = 0;
+        break;
       case 9:
         asm volatile ("  jmp 0");
     }

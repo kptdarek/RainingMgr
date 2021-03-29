@@ -15,7 +15,7 @@ struct SymDef
 
 const __FlashStringHelper* titles[SYM_CNT];
 
-SensorsSymulator::SensorsSymulator():  Index(0),smallIndex(0)
+SensorsSymulator::SensorsSymulator():  Index(0),smallIndex(0), RealFlow(false)
 { 
   
 }
@@ -25,7 +25,7 @@ void SensorsSymulator::Setup()
   StartTime =  (millis() EXTRA_MILLIS);
   LastStepTime = GetTime();
   Index = 0;
-  RealFlow = false;
+ 
 }
 
 SymDef& GestSym(int index)

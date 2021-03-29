@@ -10,6 +10,8 @@
 #define MENU_TOPBOT_C char(3)
 #define DEGR_CELC_C char(4)
 #define LITER_P_MIN_C char(5)
+#define SND_C char(6)
+#define NOSND_C char(7)
 
 #define POWER_GUARD 255
 
@@ -26,26 +28,23 @@ byte sun_protect_led = 15;
 byte alarm_led = 13;
 byte piezo_pin = 9;
 
-byte top[8] = {
-  B00100,
-  B01110,
-  B10101,
-  B00100,
-  B00100,
-  B00100,
-  B00100,
-};
-byte topBot[8] = {
-  B00100,
-  B01110,
-  B10101,
-  B00100,
-  B10101,
-  B01110,
-  B00100,
-};
 
-byte bot[8] = {
+byte CCRam[8];
+
+#define MaxCC 7
+const PROGMEM byte CCFlash[MaxCC][8] =
+{
+  //{0x1f, 0x1f, 0xe, 0xe, 0xe, 0xe, 0xe, 0xe}, /* ram up */
+ {//top
+  B00100,
+  B01110,
+  B10101,
+  B00100,
+  B00100,
+  B00100,
+  B00100,
+},
+{//bot
   B00100,
   B00100,
   B00100,
@@ -53,9 +52,17 @@ byte bot[8] = {
   B10101,
   B01110,
   B00100,
-};
-
-byte degCel[8] = {
+},
+{//topBot
+  B00100,
+  B01110,
+  B10101,
+  B00100,
+  B10101,
+  B01110,
+  B00100,
+},
+{ //degCel
   B01000,
   B10100,
   B01000,
@@ -63,9 +70,8 @@ byte degCel[8] = {
   B00100,
   B00100,
   B00011,
-};
-
-byte lnm[8] = {
+},
+{//lnm
   B00100,
   B00100,
   B00100,
@@ -73,6 +79,26 @@ byte lnm[8] = {
   B01111,
   B10101,
   B10101,
+},
+{//snd
+  B00001,
+  B00011,
+  B11101,
+  B10001,
+  B11101,
+  B00011,
+  B00001
+},
+
+{//no snd
+  B01001,
+  B01011,
+  B11101,
+  B10101,
+  B11101,
+  B00111,
+  B00101
+}
 };
 
 UIMgr::UIMgr(): lcd(0x27, 16, 2)
@@ -114,14 +140,13 @@ void UIMgr::ResetTempHisotry()
 
 void UIMgr::Setup(Valves* v)
 {
-
   lcd.init(); // initialize the lcd
-
-  lcd.createChar(1, top);
-  lcd.createChar(2, bot);
-  lcd.createChar(3, topBot);
-  lcd.createChar(4, degCel);
-  lcd.createChar(5, lnm);
+  for (int i = 0 ; i < MaxCC ; i++)
+  {
+    memcpy_P(CCRam, &CCFlash[i][0], 8);
+    lcd.createChar(1+i, CCRam);
+  }
+  
   lcd.backlight();
 
   pinMode(key1_pin, INPUT_PULLUP);
@@ -869,8 +894,13 @@ lcd.print(F(" R"));
 
   lcd.print(F("<"));
   lcd.print(cfg.ValMaxWorkMin);
-  lcd.print(F("!"));
-  lcd.print(cfg.Alarms, 2);
+  lcd.print(F(" "));
+  lcd.print(cfg.Alarms & ALARM_SOUNDS ? SND_C : NOSND_C);  
+  lcd.print(cfg.Alarms & ALARM_INFO ? F("I") : F("-"));
+  lcd.print(cfg.Alarms & ALARM_FLOW ? F("P") : F("-"));
+  lcd.print(cfg.Alarms & ALARM_SELENOID ? F("C") : F("-"));
+  lcd.print(cfg.Alarms & ALARM_TERMDEV ? F("T") : F("-"));
+  
 
   lcd.setCursor(0, 1);
   lcd.print((millis() EXTRA_MILLIS) / 1000 / 60 / 60);

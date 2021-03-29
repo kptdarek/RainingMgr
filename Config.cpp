@@ -1,4 +1,5 @@
 #include "Config.h"
+#include "Arduino.h"
 #include <EEPROM.h>
 #define EEPROM_DATA_OFFSET 100
 
@@ -36,6 +37,7 @@ void Config::Load()
   //Init();//do czasu zapisania na EEPROM
   if (cfg.AntiFreezePeriod == -1) Init();
   if (cfg.ValMaxWorkMin < 3) cfg.ValMaxWorkMin = 3;
+  if (isnan(cfg.T1OnSunDelta) || !(cfg.T1OnSunDelta > 3 && cfg.T1OnSunDelta < 15))  cfg.T1OnSunDelta = 5;
 }
 
 void Config::Save()

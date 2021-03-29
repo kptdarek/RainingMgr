@@ -72,11 +72,21 @@ SymDef& GestSym(int index)
     {0, 0, 0, 0}
   };
 
+    static SensStep delayFlower[] =
+  { {5.0, 5.2, 9, 24},
+    {12, 5, 9,255 },
+   // {12, 5, 9,255 },
+ //   {34, 24, 9,1240 },
+ //   {3.0, 3, 9,240 },
+    {0, 0, 0, 0}
+  };
+
   static SymDef symDef[SYM_CNT] =
   {
     {F("Histereza"), stepsHist,1000},
     {F("Histereza*10"), stepsHist,10000},
-    {F("Wielblad-mroz"), steps1,1000}
+ //   {F("Wielblad-mroz"), steps1,1000},
+    {F("Opoznienie kwit"), delayFlower,1000}
   };
   return symDef[index];
 }

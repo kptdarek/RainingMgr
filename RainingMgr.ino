@@ -146,7 +146,7 @@ void DoValvesCfg()
 
 void DoTempMenu()
 {
-  const __FlashStringHelper* items[] = {F("Anty zmarz"), F("25%"), F("50%"), F("75%"), F("100%"),  F("Opoz kw 100%"), F("Rozmiar hist"), F("Opoz wyl 25%")};
+  const __FlashStringHelper* items[] = {F("Anty zmarz"), F("25%"), F("50%"), F("75%"), F("100%"),F("W sloncu dT"), F("Opoz kw 100%"), F("Rozmiar hist"), F("Opoz wyl 25%")};
   int index;
   do {
     index = ui.Menu(F("Temperatury"), items, sizeof(items) / sizeof(__FlashStringHelper*));
@@ -169,12 +169,15 @@ void DoTempMenu()
         cfg.Go100Temp = ui.SetValue(items[index], cfg.Go100Temp);
         break;
       case 5:
+        cfg.T1OnSunDelta = ui.SetValue(items[index], cfg.T1OnSunDelta);
+        break;        
+      case 6:
         cfg.DelayFlower100Temp = ui.SetValue(items[index], cfg.DelayFlower100Temp);
         break;
-      case 6:
+      case 7:
         cfg.HisterSize = ui.SetValue(items[index], cfg.HisterSize);
         break;
-      case 7:
+      case 8:
         cfg.DelayStop = ui.SetValue(items[index], cfg.DelayStop);
         break;
     }
@@ -224,7 +227,7 @@ void DoAlarmsMenu()
 
 void DoSettingsMenu()
 {
-  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Max min cewki"),  F("Zapisz"), F("Przywroc"), F("Zeruj liczn."), F("Reset")};
+  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"),F("Opoz kwit okres") ,F("Max min cewki"),  F("Zapisz"), F("Przywroc"), F("Zeruj liczn."), F("Reset")};
   int index;
   do {
     index = ui.Menu(F("Ustawienia"), items, sizeof(items) / sizeof(__FlashStringHelper*));
@@ -248,19 +251,22 @@ void DoSettingsMenu()
         cfg.AntiFreezeOpened = ui.SetValue(items[index], cfg.AntiFreezeOpened);
         break;
       case 5:
+        cfg.DelayFlowerMinutsPeriod = ui.SetValue(items[index], cfg.DelayFlowerMinutsPeriod);
+        break;        
+      case 6:
         cfg.ValMaxWorkMin = ui.SetValue(items[index], cfg.ValMaxWorkMin);//TODO zmienic na 5
         break;
-      case 6:
+      case 7:
         Config::Save();//ok
         break;
-      case 7:
+      case 8:
         Config::Init();
         break;
-      case 8:
+      case 9:
         Config::SetTotalWater(0);
         totalWaterAll = 0;
         break;
-      case 9:
+      case 10:
         asm volatile ("  jmp 0");
     }
   } while (index != -1);
@@ -279,7 +285,7 @@ void DoFixedMode()
 
 void DoMainMenu()
 {
-  const __FlashStringHelper* items[] = {F("Alarmy"), F("Status"), F("Hisoria"), F("Opoz kwitnien"), F("Pol automat"), F("Ustawienia"),  F("Testy"),  F("#FIX Bajp/Zamk")};
+  const __FlashStringHelper* items[] = {F("Alarmy"), F("Status"), F("Hisoria"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz"): F("Opoz kwitnien"), F("Pol automat"), F("Ustawienia"),  F("Testy"),  F("#FIX Bajp/Zamk")};
   int index = ui.Menu(F("Meni glowne"), items, sizeof(items) / sizeof(__FlashStringHelper*) -  (valves.CanSetFixedMode() ? 0 : 1));
 
   switch (index)
@@ -294,7 +300,7 @@ void DoMainMenu()
       ui.History();
       break;
     case 3:
-      SetMode(WmDeleayFolowering);
+      SetMode(currentMode == WmDeleayFolowering ? WmNone : WmDeleayFolowering);
       break;
     case 4:
       DoHalfAutoMode(items[index]);
@@ -516,15 +522,32 @@ double Right(double t1, double t2)
 
 void CheckDelayFlowMode(double t1, double t2)
 {
+  static ValMode lastModeDF = ValZero;
   Configuration& cfg = Config::Get();
-  double t = Right( t1,  t2);
-  if (!IsOk(t))
-  {
-    valves.SetMode(Val50);
-    return;
-  }
 
-  valves.SetMode(t > cfg.DelayFlower100Temp ? Val100 : Val50);
+  if (IsOk(t1) && IsOk(t2))
+  {
+    ValMode newMode = lastModeDF;
+    if (t1 - t2 > cfg.T1OnSunDelta)// nasłoneczniony T1
+    {
+      double change = t2 - cfg.DelayFlower100Temp; // temperatura na t2
+      if (lastModeDF == Val100)
+      {
+        if (change < (-2.0* cfg.HisterSize)) newMode = Val50;
+      }  else 
+      {
+        newMode = change > 0 ? Val100 : Val50;
+      }
+    } else { //nie nasłonczniony
+      if ( lastModeDF != ValZero && (t1 - t2 < (cfg.T1OnSunDelta - cfg.HisterSize*2.0)))
+      {
+        newMode = ValZero;
+      }
+    }
+    
+    lastModeDF = newMode;
+    valves.SetMode(newMode);   
+  }   
 }
 
 void CheckAntiFreezMode(double t1, double t2, bool halfAuto)
@@ -557,7 +580,7 @@ void CheckAntiFreezMode(double t1, double t2, bool halfAuto)
 
     valves.SetMode(newMode);
 
-    if (lastMode == Val25 && valves.CanSetFixedMode()) // nie zadziała jak opróźnienie wyłaczenia jest mniejsze niż antyfreez generalnie przy wyłaczaniu nie ma antyfreez
+    if ((lastMode == Val25 || lastMode == ValAntiFreeze) && valves.CanSetFixedMode()) 
     {
       ui.AddAlarm(F("Zalecany FIX #0%"), ALARM_INFO);
     }

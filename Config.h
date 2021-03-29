@@ -40,6 +40,7 @@ struct Configuration
   int Sensors; //0 real 1-10 satic  11-> special
   float DelayStop;
   bool HalfAutomaticMode;
+  float T1OnSunDelta;  
 };
 
 class Config

@@ -42,7 +42,7 @@ void setup()
   if (cfg.Sensors > 0 && cfg.Sensors <= 1 + dynaSensors1.Count())
   {
     sensors = &dynaSensors1;
-    dynaSensors1.SetMode(cfg.Sensors - 1);
+    dynaSensors1.SetMode(cfg.Sensors - 1, false);
   };
 
   ui.Setup(&valves);
@@ -88,7 +88,7 @@ void DoStatTempMenu()
   }
 }
 
-void DoDynamicSymMenu()
+void DoDynamicSymMenu(bool realFlow)
 {
   Configuration& cfg = Config::Get();
   const __FlashStringHelper** valvest = dynaSensors1.Titles();
@@ -97,7 +97,7 @@ void DoDynamicSymMenu()
   {
     cfg.Sensors = cfgIndex + 1;
     sensors = &dynaSensors1;
-    dynaSensors1.SetMode(cfgIndex);
+    dynaSensors1.SetMode(cfgIndex, realFlow);
     sensors->Setup();
   }
 }
@@ -105,9 +105,9 @@ void DoDynamicSymMenu()
 void DoTestMenu()
 {
   Configuration& cfg = Config::Get();
-  const __FlashStringHelper* items[] = { F("Stala temp"), F("Sym. dyna"), F("Wyl. symul")
+  const __FlashStringHelper* items[] = { F("Stala temp"), F("Symul dyna"),F("Przep real"), F("Wyl symul")
 #if DEBUG
-                                         , F("LEDy")
+  , F("LEDy")
 #endif
                                        };
   int index = ui.Menu(F("Testy"), items, sizeof(items) / sizeof(__FlashStringHelper*));
@@ -117,15 +117,18 @@ void DoTestMenu()
       DoStatTempMenu();
       break;
     case 1:
-      DoDynamicSymMenu();
+      DoDynamicSymMenu(false);
       break;
     case 2:
+      DoDynamicSymMenu(true);
+      break;      
+    case 3:
       sensors = &realSensors;
       cfg.Sensors = 0;
       sensors->Setup();
       break;
 #if DEBUG
-    case 3:
+    case 4:
       ui.TestLeds();
       break;
 #endif

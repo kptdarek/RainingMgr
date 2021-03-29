@@ -26,6 +26,7 @@ class SensorsSymulator : public SensorsBase
 {
   SensStep* Steps;
   int Index;
+  bool RealFlow;
   int smallIndex;
   unsigned long StartTime, LastStepTime;
   int timeFaktor;
@@ -33,7 +34,7 @@ class SensorsSymulator : public SensorsBase
   SensorsSymulator();
   double GetTempFromMode(StaticSymMode mode);
  void Setup();
-  void SetMode(int index);
+  void SetMode(int index, bool realFlow);
   const __FlashStringHelper* Title(int index);
   const __FlashStringHelper** Titles();
   int Count();

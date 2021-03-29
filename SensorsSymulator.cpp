@@ -25,6 +25,7 @@ void SensorsSymulator::Setup()
   StartTime =  (millis() EXTRA_MILLIS);
   LastStepTime = GetTime();
   Index = 0;
+  RealFlow = false;
 }
 
 SymDef& GestSym(int index)
@@ -107,11 +108,12 @@ const __FlashStringHelper** SensorsSymulator::Titles()
   return titles;
 }
 
-void SensorsSymulator::SetMode(int index)
+void SensorsSymulator::SetMode(int index, bool realFlow)
 {
   SymDef& def = GestSym(index);
   timeFaktor = def.timeFactor;  
   Steps = def.steps;
+  RealFlow = realFlow;
 }
 
 unsigned long SensorsSymulator::GetTime()
@@ -148,7 +150,7 @@ double  SensorsSymulator::GetTemp(int index)
 
 byte  SensorsSymulator::GetFlow()
 {
-  return Steps[Index].Flow;
+  return  RealFlow ? flow : Steps[Index].Flow;
 }
 
 

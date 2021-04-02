@@ -16,7 +16,7 @@
 #define POWER_GUARD 255
 
 extern double totalWater;
-
+extern byte saveEepromCounter;
 
 
 byte key1_pin = 5;
@@ -913,6 +913,7 @@ lcd.print(F(" R"));
   lcd.print(F("/"));
   lcd.print(totalWater, 0);
   lcd.print(F("l"));
+  //lcd.print((char) ('A'+saveEepromCounter));
 
   delay(3000);
   WaitKeyUp();

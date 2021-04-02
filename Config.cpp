@@ -18,11 +18,12 @@ void Config::Init()
   cfg.Go75Temp = -3.0f;
   cfg.Go100Temp = -4.0f;
   cfg.HisterSize = 0.3f;
-  cfg.DelayFlower100Temp = 22.0f;
+  cfg.DelayFlower100Temp = 16.0f;
   cfg.ValMaxWorkMin = 30;
   cfg.Sensors = 0;
   cfg.DelayStop = 2.0;
   cfg.HalfAutomaticMode = false;
+  cfg.T1OnSunDelta = 3;
 }
 
 Configuration& Config::Get()
@@ -37,7 +38,7 @@ void Config::Load()
   //Init();//do czasu zapisania na EEPROM
   if (cfg.AntiFreezePeriod == -1) Init();
   if (cfg.ValMaxWorkMin < 3) cfg.ValMaxWorkMin = 3;
-  if (isnan(cfg.T1OnSunDelta) || !(cfg.T1OnSunDelta > 3 && cfg.T1OnSunDelta < 15))  cfg.T1OnSunDelta = 5;
+  if (isnan(cfg.T1OnSunDelta) || !(cfg.T1OnSunDelta > 2 && cfg.T1OnSunDelta < 15))  cfg.T1OnSunDelta = 3;
 }
 
 void Config::Save()
@@ -54,6 +55,5 @@ void Config::Save()
 }
 void Config::SetTotalWater( long v)
 {
- 
-  EEPROM.put(EEPROM_DATA_OFFSET + 0, v);
+  if (GetTotalWater() != v) EEPROM.put(EEPROM_DATA_OFFSET + 0, v);
 }

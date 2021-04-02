@@ -21,6 +21,7 @@ byte sensorPin       = 2;
 int pulseCount = 0;
 double totalWater = 0.0;
 long  totalWaterAll = 0;
+byte saveEepromCounter = 0;
 
 unsigned long lastPulsMillis = 0;
 unsigned long lastGoodTermPeekMillis = 0;
@@ -105,9 +106,9 @@ void DoDynamicSymMenu(bool realFlow)
 void DoTestMenu()
 {
   Configuration& cfg = Config::Get();
-  const __FlashStringHelper* items[] = { F("Stala temp"), F("Symul dyna"),F("Przep real"), F("Wyl symul")
+  const __FlashStringHelper* items[] = { F("Stala temp"), F("Symul dyna"), F("Przep real"), F("Wyl symul")
 #if DEBUG
-  , F("LEDy")
+                                         , F("LEDy")
 #endif
                                        };
   int index = ui.Menu(F("Testy"), items, sizeof(items) / sizeof(__FlashStringHelper*));
@@ -121,7 +122,7 @@ void DoTestMenu()
       break;
     case 2:
       DoDynamicSymMenu(true);
-      break;      
+      break;
     case 3:
       sensors = &realSensors;
       cfg.Sensors = 0;
@@ -149,7 +150,7 @@ void DoValvesCfg()
 
 void DoTempMenu()
 {
-  const __FlashStringHelper* items[] = {F("Anty zmarz"), F("25%"), F("50%"), F("75%"), F("100%"),F("W sloncu dT"), F("Opoz kw 100%"), F("Rozmiar hist"), F("Opoz wyl 25%")};
+  const __FlashStringHelper* items[] = {F("Anty zmarz"), F("25%"), F("50%"), F("75%"), F("100%"), F("W sloncu dT"), F("Opoz kw MAX"), F("Rozmiar hist"), F("Opoz wyl 25%")};
   int index;
   do {
     index = ui.Menu(F("Temperatury"), items, sizeof(items) / sizeof(__FlashStringHelper*));
@@ -173,7 +174,7 @@ void DoTempMenu()
         break;
       case 5:
         cfg.T1OnSunDelta = ui.SetValue(items[index], cfg.T1OnSunDelta);
-        break;        
+        break;
       case 6:
         cfg.DelayFlower100Temp = ui.SetValue(items[index], cfg.DelayFlower100Temp);
         break;
@@ -230,7 +231,7 @@ void DoAlarmsMenu()
 
 void DoSettingsMenu()
 {
-  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"),F("Opoz kwit okres") ,F("Max min cewki"),  F("Zapisz"), F("Przywroc"), F("Zeruj liczn."), F("Reset")};
+  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Opoz kwit okres") , F("Max min cewki"),  F("Zapisz"), F("Przywroc"), F("Zeruj liczn."), F("Reset")};
   int index;
   do {
     index = ui.Menu(F("Ustawienia"), items, sizeof(items) / sizeof(__FlashStringHelper*));
@@ -255,7 +256,7 @@ void DoSettingsMenu()
         break;
       case 5:
         cfg.DelayFlowerMinutsPeriod = ui.SetValue(items[index], cfg.DelayFlowerMinutsPeriod);
-        break;        
+        break;
       case 6:
         cfg.ValMaxWorkMin = ui.SetValue(items[index], cfg.ValMaxWorkMin);//TODO zmienic na 5
         break;
@@ -288,7 +289,7 @@ void DoFixedMode()
 
 void DoMainMenu()
 {
-  const __FlashStringHelper* items[] = {F("Alarmy"), F("Status"), F("Hisoria"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz"): F("Opoz kwitnien"), F("Pol automat"), F("Ustawienia"),  F("Testy"),  F("#FIX Bajp/Zamk")};
+  const __FlashStringHelper* items[] = {F("Alarmy"), F("Status"), F("Hisoria"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz") : F("Opoz kwitnien"), F("Pol automat"), F("Ustawienia"),  F("Testy"),  F("#FIX Bajp/Zamk")};
   int index = ui.Menu(F("Meni glowne"), items, sizeof(items) / sizeof(__FlashStringHelper*) -  (valves.CanSetFixedMode() ? 0 : 1));
 
   switch (index)
@@ -357,14 +358,13 @@ void PressSmartKey()
 
 void loop()
 {
-  static byte iter = 0;
-  static byte saveEepromCounter = 0;
+  static byte avrFlowSecondHash = 0;
   static long avrFlowSum = 0;
   static int avrFlowSamples = 0;
   static unsigned long lastChekAvrFlowMillis = 0 ;
   static byte t2RetryCnt = 0;
   Configuration& cfg = Config::Get();
-  iter++;
+  //iter++;
   sensors->RequestTemps();
 
   Task2Do task = ui.ProcessKeys();
@@ -422,8 +422,20 @@ void loop()
 
   int flow = sensors->GetFlow();
   ui.SetFlow(flow, CurrentV);
+  byte secHash = (byte)(long)(mils / 1000l) % 60L;
 
-  if (iter % 4 == 0) { //~ onece a seconds
+#if SERIAL_PRINT
+  Serial.print(F("Tick"));
+  Serial.println(secHash);
+#endif
+
+  if (secHash != avrFlowSecondHash) { //only onece a seconds
+    avrFlowSecondHash = secHash;
+
+#if SERIAL_PRINT
+    Serial.println(F("Flow check"));
+#endif
+
     if (avrFlowSamples == 0) lastChekAvrFlowMillis = mils;
     avrFlowSum += flow; avrFlowSamples++;
     if (avrFlowSamples >=  ((currentMode == WmDeleayFolowering) ? cfg.DelayFlowerMinutsPeriod * 60 : cfg.AntiFreezePeriod))
@@ -433,19 +445,7 @@ void loop()
       unsigned long secs = (mils - lastChekAvrFlowMillis) / 1000L;
       totalWater += (double)((double)avrFlowSum / (double)avrFlowSamples) * ((double)secs / 60.0f);
 
-#if SERIAL_PRINT
 
-      Serial.print(F("totalWater:"));
-      Serial.print(totalWater);
-      Serial.print(F("totalWaterAll:"));
-      Serial.print(totalWaterAll);
-      Serial.print(F("secs:"));
-      Serial.print(secs);
-      Serial.print(F("avrFlow:"));
-      Serial.print(avrFlow);
-      Serial.print(F("saveEepromCounter:"));
-      Serial.println(saveEepromCounter);
-#endif
       if (saveEepromCounter >= 15 ) // 15 x 4 min
       {
         saveEepromCounter = 0;
@@ -492,6 +492,9 @@ void loop()
       case WmAntiFreezHalfAuto:
         CheckAntiFreezMode(t1, t2, true);
         break;
+      case WmNone:
+        valves.SetMode(ValZero);
+        break;
     }
 
     t2RetryCnt = 0;
@@ -534,23 +537,23 @@ void CheckDelayFlowMode(double t1, double t2)
     if (t1 - t2 > cfg.T1OnSunDelta)// nasłoneczniony T1
     {
       double change = t2 - cfg.DelayFlower100Temp; // temperatura na t2
-      if (lastModeDF == Val100)
+      if (lastModeDF == Val50)
       {
-        if (change < (-2.0* cfg.HisterSize)) newMode = Val50;
-      }  else 
+        if (change < (-2.0 * cfg.HisterSize)) newMode = Val25;
+      }  else
       {
-        newMode = change > 0 ? Val100 : Val50;
+        newMode = change > 0 ? Val50 : Val25;
       }
     } else { //nie nasłonczniony
-      if ( lastModeDF != ValZero && (t1 - t2 < (cfg.T1OnSunDelta - cfg.HisterSize*2.0)))
+      if ( lastModeDF != ValZero && (t1 - t2 < (cfg.T1OnSunDelta - cfg.HisterSize * 2.0)))
       {
         newMode = ValZero;
       }
     }
-    
+
     lastModeDF = newMode;
-    valves.SetMode(newMode);   
-  }   
+    valves.SetMode(newMode);
+  }
 }
 
 void CheckAntiFreezMode(double t1, double t2, bool halfAuto)
@@ -583,7 +586,7 @@ void CheckAntiFreezMode(double t1, double t2, bool halfAuto)
 
     valves.SetMode(newMode);
 
-    if ((lastMode == Val25 || lastMode == ValAntiFreeze) && valves.CanSetFixedMode()) 
+    if ((lastMode == Val25 || lastMode == ValAntiFreeze) && valves.CanSetFixedMode())
     {
       ui.AddAlarm(F("Zalecany FIX #0%"), ALARM_INFO);
     }

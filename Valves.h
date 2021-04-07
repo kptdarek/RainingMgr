@@ -56,6 +56,7 @@ class Valves
     VAlarm PeekAlarm();
     Valves();
     bool CanSetFixedMode();
+    bool NearSelenoidHot();
     bool IsNO();
     void ResetFlowStatus();
     void Setup();

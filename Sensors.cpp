@@ -70,10 +70,7 @@ void SensorsBase::RequestTemps()
 void SensorsBase::SetFlowPulses(int cnt, int interval)
 {  Configuration& cfg = Config::Get();
   double pulsPerSeconds = double(cnt) / double(interval) * 1000.0f;
-  #if SERIAL_PRINT
-  Serial.println("SetFlowPulses");
-    Serial.print(cnt);
-  #endif
+
   int f = (int)( pulsPerSeconds / cfg.flowFactor);
   flow = f > 254 ? 254 : (byte)f;
   }

@@ -226,6 +226,17 @@ void Valves::CheckMaxHigh()
   }
 }
 
+bool Valves::NearSelenoidHot()
+{
+  #if SERIAL_PRINT
+  Serial.print(F("NearSelenoidHot"));
+    Serial.println(valHighMinuts);
+#endif
+    if (valHighMinuts == -1) return false;
+    Configuration& cfg = Config::Get();
+    return (lastSeconds - valHighMinuts * 60 > (cfg.ValMaxWorkMin - 2) * 60); //dwie minuty przed alarmem o przegrzaniu cewki  
+}
+
 void Valves::Alarm(const __FlashStringHelper* msg, byte type)
 {
   lastAlarm.title = msg;

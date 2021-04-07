@@ -298,6 +298,7 @@ void DoMainMenu()
       if (ui.IsAnyAlarm()) ui.CheckAlarms();
       break;
     case 1:
+      Config::SetTotalWater(totalWaterAll + (long)totalWater);
       ui.ShowStatus();
       break;
     case 2:
@@ -353,6 +354,7 @@ void PressSmartKey()
     return;
   }
 
+  Config::SetTotalWater(totalWaterAll + (long)totalWater);
   ui.ShowStatus();
 }
 
@@ -424,17 +426,8 @@ void loop()
   ui.SetFlow(flow, CurrentV);
   byte secHash = (byte)(long)(mils / 1000l) % 60L;
 
-#if SERIAL_PRINT
-  Serial.print(F("Tick"));
-  Serial.println(secHash);
-#endif
-
   if (secHash != avrFlowSecondHash) { //only onece a seconds
     avrFlowSecondHash = secHash;
-
-#if SERIAL_PRINT
-    Serial.println(F("Flow check"));
-#endif
 
     if (avrFlowSamples == 0) lastChekAvrFlowMillis = mils;
     avrFlowSum += flow; avrFlowSamples++;
@@ -466,6 +459,11 @@ void loop()
     }
   } //~ onece a seconds
 
+
+  if (currentMode == WmDeleayFolowering && IsOk(t1) && t1 < 7.0) //jeśli na górnym mniej niz 7 to nie ma co opóźniać
+  {
+    SetMode(WmNone);
+  }
 
   if (currentMode == WmAntiFreez || currentMode == WmAntiFreezHalfAuto)
   {
@@ -585,10 +583,24 @@ void CheckAntiFreezMode(double t1, double t2, bool halfAuto)
     }
 
     valves.SetMode(newMode);
-
+    static bool proposeFixedMode = false;
     if ((lastMode == Val25 || lastMode == ValAntiFreeze) && valves.CanSetFixedMode())
     {
-      ui.AddAlarm(F("Zalecany FIX #0%"), ALARM_INFO);
+      proposeFixedMode = true;
+    }
+
+    if (proposeFixedMode)
+    {
+      if (valves.CanSetFixedMode())
+      {
+        if (valves.NearSelenoidHot())
+        {
+          ui.AddAlarm(F("Zalecany FIX #0%"), ALARM_INFO);
+          proposeFixedMode = false;
+        }
+      } else {
+        proposeFixedMode = false;
+      }
     }
 
     lastMode = m;

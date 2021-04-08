@@ -5,6 +5,7 @@
 #include "Config.h"
 
 #define MENU_LIVE_LEN 20  //*500ms
+#define LITER_C char(0)
 #define MENU_TOP_C char(1)
 #define MENU_BOT_C char(2)
 #define MENU_TOPBOT_C char(3)
@@ -31,11 +32,20 @@ byte piezo_pin = 9;
 
 byte CCRam[8];
 
-#define MaxCC 7
+#define MaxCC 8
 const PROGMEM byte CCFlash[MaxCC][8] =
 {
-  //{0x1f, 0x1f, 0xe, 0xe, 0xe, 0xe, 0xe, 0xe}, /* ram up */
- {//top
+//{0x1f, 0x1f, 0xe, 0xe, 0xe, 0xe, 0xe, 0xe}, /* ram up */
+{ //liter symbol
+  B00010,
+  B00010,
+  B00010,
+  B00010,
+  B00010,
+  B00010,
+  B00001
+},
+{ //top
   B00100,
   B01110,
   B10101,
@@ -44,7 +54,7 @@ const PROGMEM byte CCFlash[MaxCC][8] =
   B00100,
   B00100,
 },
-{//bot
+{ //bot
   B00100,
   B00100,
   B00100,
@@ -53,7 +63,7 @@ const PROGMEM byte CCFlash[MaxCC][8] =
   B01110,
   B00100,
 },
-{//topBot
+{ //topBot
   B00100,
   B01110,
   B10101,
@@ -71,7 +81,7 @@ const PROGMEM byte CCFlash[MaxCC][8] =
   B00100,
   B00011,
 },
-{//lnm
+{ //lnm
   B00100,
   B00100,
   B00100,
@@ -80,7 +90,7 @@ const PROGMEM byte CCFlash[MaxCC][8] =
   B10101,
   B10101,
 },
-{//snd
+{ //snd
   B00001,
   B00011,
   B11101,
@@ -90,7 +100,7 @@ const PROGMEM byte CCFlash[MaxCC][8] =
   B00001
 },
 
-{//no snd
+{ //no snd
   B01001,
   B01011,
   B11101,
@@ -144,9 +154,9 @@ void UIMgr::Setup(Valves* v)
   for (int i = 0 ; i < MaxCC ; i++)
   {
     memcpy_P(CCRam, &CCFlash[i][0], 8);
-    lcd.createChar(1+i, CCRam);
+    lcd.createChar(i, CCRam);
   }
-  
+
   lcd.backlight();
 
   pinMode(key1_pin, INPUT_PULLUP);
@@ -231,10 +241,10 @@ void UIMgr::SaveHistoryItem(unsigned long timeFrom24)
   history[hisotryIndex].PowerPrec = lastPowerPrecent;
 
 #if SERIAL_PRINT
-Serial.print(F("SaveHistoryI:"));
-Serial.print(hisotryIndex);
-Serial.print(F("Flow:"));
-Serial.println(lastFlowA);
+  Serial.print(F("SaveHistoryI:"));
+  Serial.print(hisotryIndex);
+  Serial.print(F("Flow:"));
+  Serial.println(lastFlowA);
 #endif
 
   hisotryIndex =  hisotryPlus(hisotryIndex );
@@ -652,89 +662,89 @@ void UIMgr::CheckAlarms()
 
     Alarms[index].flags = Alarms[index].flags & ~ALARM_UNREAD;
 #if SERIAL_PRINT
-Serial.println(Alarms[index].flags);
+    Serial.println(Alarms[index].flags);
 #endif
-} while (key != BackKey  && key != EnterKey);
+  } while (key != BackKey  && key != EnterKey);
 
-    Invalidate();
-  }
+  Invalidate();
+}
 
-  void UIMgr::Alarm(byte index)
+void UIMgr::Alarm(byte index)
+{
+  Print(Alarms[index].msg, 1);
+  PrintTime(Alarms[index].time);
+  lcd.setCursor(7, 0);
+  lcd.print(F("[")); lcd.print(Alarms[index].cnt); lcd.print(F("]"));
+}
+
+void  UIMgr::History(byte index)
+{
+  Invalidate();
+  double t1 = history[index].t1;
+  double t2 = history[index].t2;
+  SetTime(history[index].time, false);
+  SetTemperature(t1, TopT, false);
+  SetTemperature(t2, BottomT, false);
+  SetFlow(history[index].flowA, AverageF);
+  SetPowerPrecent(history[index].PowerPrec);
+
+  byte prev = historyMinus(index);
+  bool prevExist = history[prev].PowerPrec != POWER_GUARD;
+  char caseChar = ' ';
+  if (prevExist && history[hisotryPlus(index)].PowerPrec != POWER_GUARD ) caseChar = MENU_TOPBOT_C;
+  else if (prevExist) caseChar = MENU_TOP_C;
+  else if (history[hisotryPlus(index)].PowerPrec != POWER_GUARD) caseChar = MENU_BOT_C;
+  lcd.setCursor(5, 1);
+  lcd.print(F("HST"));
+  lcd.print(caseChar);
+
+  if (prevExist)
   {
-    Print(Alarms[index].msg, 1);
-    PrintTime(Alarms[index].time);
-    lcd.setCursor(7, 0);
-    lcd.print(F("[")); lcd.print(Alarms[index].cnt); lcd.print(F("]"));
-  }
 
-  void  UIMgr::History(byte index)
-  {
-    Invalidate();
-    double t1 = history[index].t1;
-    double t2 = history[index].t2;
-    SetTime(history[index].time, false);
-    SetTemperature(t1, TopT, false);
-    SetTemperature(t2, BottomT, false);
-    SetFlow(history[index].flowA, AverageF);
-    SetPowerPrecent(history[index].PowerPrec);
-
-    byte prev = historyMinus(index);
-    bool prevExist = history[prev].PowerPrec != POWER_GUARD;
-    char caseChar = ' ';
-    if (prevExist && history[hisotryPlus(index)].PowerPrec != POWER_GUARD ) caseChar = MENU_TOPBOT_C;
-    else if (prevExist) caseChar = MENU_TOP_C;
-    else if (history[hisotryPlus(index)].PowerPrec != POWER_GUARD) caseChar = MENU_BOT_C;
-    lcd.setCursor(5, 1);
-    lcd.print(F("HST"));
-    lcd.print(caseChar);
-
-    if (prevExist)
+    double pt1 = history[prev].t1;
+    double pt2 = history[prev].t1;
+    if (pt1 != t1)
     {
-
-      double pt1 = history[prev].t1;
-      double pt2 = history[prev].t1;
-      if (pt1 != t1)
-      {
-        lcd.setCursor(10, 0);
-        lcd.print(pt1 < t1 ? MENU_TOP_C : MENU_BOT_C);
-      }
-      if (pt2 != t2)
-      {
-        lcd.setCursor(10, 1);
-        lcd.print(pt2 < t2 ? MENU_TOP_C : MENU_BOT_C);
-      }
+      lcd.setCursor(10, 0);
+      lcd.print(pt1 < t1 ? MENU_TOP_C : MENU_BOT_C);
     }
-
-
+    if (pt2 != t2)
+    {
+      lcd.setCursor(10, 1);
+      lcd.print(pt2 < t2 ? MENU_TOP_C : MENU_BOT_C);
+    }
   }
 
-  void  UIMgr::Invalidate()
-  {
-    lastFlowC = 255;
-    lastFlowA = 255;
-    lastPowerPrecent = 255;
-    lcd.clear();
-  }
+
+}
+
+void  UIMgr::Invalidate()
+{
+  lastFlowC = 255;
+  lastFlowA = 255;
+  lastPowerPrecent = 255;
+  lcd.clear();
+}
 
 #if DEBUG
 void UIMgr::TestLeds()
 {
-Print(F("Test LED-ow"));
-static bool state_1 = false;
-for (int i = 0; i < 20; i++)
-{
-delay(500);
-state_1 = !state_1;
+  Print(F("Test LED-ow"));
+  static bool state_1 = false;
+  for (int i = 0; i < 20; i++)
+  {
+    delay(500);
+    state_1 = !state_1;
 
-  digitalWrite(frost_raining_led, state_1 ? HIGH : LOW );
-  digitalWrite(sun_protect_led, state_1 ? LOW : HIGH );
-  digitalWrite(alarm_led, state_1 ? LOW : HIGH );
-}
+    digitalWrite(frost_raining_led, state_1 ? HIGH : LOW );
+    digitalWrite(sun_protect_led, state_1 ? LOW : HIGH );
+    digitalWrite(alarm_led, state_1 ? LOW : HIGH );
+  }
 
-digitalWrite(frost_raining_led, LOW );
-digitalWrite(sun_protect_led, LOW);
-digitalWrite(alarm_led, LOW  );
-Cls();
+  digitalWrite(frost_raining_led, LOW );
+  digitalWrite(sun_protect_led, LOW);
+  digitalWrite(alarm_led, LOW  );
+  Cls();
 }
 #endif
 
@@ -887,20 +897,20 @@ void UIMgr::ShowStatus()
   lcd.setCursor(0, 0);
   lcd.print(valves[cfg.ValvesConfig]);
 #if DEBUG
-lcd.print(F(" D"));
+  lcd.print(F(" D"));
 #else
-lcd.print(F(" R"));
+  lcd.print(F(" R"));
 #endif
 
   lcd.print(F("<"));
   lcd.print(cfg.ValMaxWorkMin);
   lcd.print(F(" "));
-  lcd.print(cfg.Alarms & ALARM_SOUNDS ? SND_C : NOSND_C);  
+  lcd.print(cfg.Alarms & ALARM_SOUNDS ? SND_C : NOSND_C);
   lcd.print(cfg.Alarms & ALARM_INFO ? F("I") : F("-"));
   lcd.print(cfg.Alarms & ALARM_FLOW ? F("P") : F("-"));
   lcd.print(cfg.Alarms & ALARM_SELENOID ? F("C") : F("-"));
   lcd.print(cfg.Alarms & ALARM_TERMDEV ? F("T") : F("-"));
-  
+
 
   lcd.setCursor(0, 1);
   lcd.print((millis() EXTRA_MILLIS) / 1000 / 60 / 60);
@@ -912,7 +922,7 @@ lcd.print(F(" R"));
   lcd.print(Config::GetTotalWater());
   lcd.print(F("/"));
   lcd.print(totalWater, 0);
-  lcd.print(F("l"));
+  lcd.print(LITER_C);
   //lcd.print((char) ('A'+saveEepromCounter));
 
   delay(3000);

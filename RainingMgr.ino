@@ -22,6 +22,7 @@ int pulseCount = 0;
 double totalWater = 0.0;
 long  totalWaterAll = 0;
 byte saveEepromCounter = 0;
+bool proposeFixedMode = false;
 
 unsigned long lastPulsMillis = 0;
 unsigned long lastGoodTermPeekMillis = 0;
@@ -289,7 +290,7 @@ void DoFixedMode()
 
 void DoMainMenu()
 {
-  const __FlashStringHelper* items[] = {F("Alarmy"), F("Status"), F("Hisoria"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz") : F("Opoz kwitnien"), F("Pol automat"), F("Ustawienia"),  F("Testy"),  F("#FIX Bajp/Zamk")};
+  const __FlashStringHelper* items[] = {F("Alarmy"), F("Status"), F("Hisoria"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz") : F("Opoz kwitnien"), F("Pol automat"), F("Ustawienia"),  F("Symulacje"),  F("#FIX Bajp/Zamk")};
   int index = ui.Menu(F("Meni glowne"), items, sizeof(items) / sizeof(__FlashStringHelper*) -  (valves.CanSetFixedMode() ? 0 : 1));
 
   switch (index)
@@ -334,7 +335,7 @@ void DoHalfAutoMode( const __FlashStringHelper* title)
 void PressSmartKey()
 {
   ui.Beep();
-  ui. WaitKeyUp();
+  ui.WaitKeyUp();
 
   if (valves.CanSetFixedMode())
   {
@@ -366,18 +367,28 @@ void loop()
   static unsigned long lastChekAvrFlowMillis = 0 ;
   static byte t2RetryCnt = 0;
   Configuration& cfg = Config::Get();
-  //iter++;
   sensors->RequestTemps();
+  unsigned long mils = (millis() EXTRA_MILLIS);
 
   Task2Do task = ui.ProcessKeys();
   switch (task)
   {
     case Time15MinPlus:
+      if (mils > 1000 * 5 * 60)
+      {
+        if (IsOk(forceTemp)) forceTemp += 1.0;
+        break;
+      }
       sensors->AddHour();
       ui.ResetHistory();
       ui.Beep();
       break;
     case Time15MinMinus:
+      if (mils > 1000 * 5 * 60)
+      {
+        if (IsOk(forceTemp))  forceTemp -= 1.0;        
+        break;
+      }
       sensors->Add10Min();
       ui.ResetHistory();
       ui.Beep();
@@ -389,7 +400,7 @@ void loop()
       PressSmartKey();
   };
 
-  unsigned long mils = (millis() EXTRA_MILLIS);
+
   if (mils - lastPulsMillis > FLOW_SAMPLE_MILLIS )
   {
     sensors->SetFlowPulses(pulseCount, mils - lastPulsMillis);
@@ -467,7 +478,11 @@ void loop()
 
   if (currentMode == WmAntiFreez || currentMode == WmAntiFreezHalfAuto)
   {
-    if ( t1 >= 5.0 && t2 >= 5.0) SetMode(WmNone);
+    if ( t1 >= 5.0 && t2 >= 5.0)
+    {
+      CheckProposeFixeMode(true);
+      SetMode(WmNone);
+    }
   } else
   {
     //automatic antifreez mode
@@ -554,6 +569,23 @@ void CheckDelayFlowMode(double t1, double t2)
   }
 }
 
+void CheckProposeFixeMode(bool checkNow)
+{
+  if (proposeFixedMode)
+  {
+    if (valves.CanSetFixedMode())
+    {
+      if (checkNow || valves.NearSelenoidHot())
+      {
+        ui.AddAlarm(F("Zalecany FIX #0%"), ALARM_INFO);
+        proposeFixedMode = false;
+      }
+    } else {
+      proposeFixedMode = false;
+    }
+  }
+}
+
 void CheckAntiFreezMode(double t1, double t2, bool halfAuto)
 {
   static ValMode lastMode = ValZero;
@@ -583,25 +615,12 @@ void CheckAntiFreezMode(double t1, double t2, bool halfAuto)
     }
 
     valves.SetMode(newMode);
-    static bool proposeFixedMode = false;
     if ((lastMode == Val25 || lastMode == ValAntiFreeze) && valves.CanSetFixedMode())
     {
       proposeFixedMode = true;
     }
 
-    if (proposeFixedMode)
-    {
-      if (valves.CanSetFixedMode())
-      {
-        if (valves.NearSelenoidHot())
-        {
-          ui.AddAlarm(F("Zalecany FIX #0%"), ALARM_INFO);
-          proposeFixedMode = false;
-        }
-      } else {
-        proposeFixedMode = false;
-      }
-    }
+    CheckProposeFixeMode(false);
 
     lastMode = m;
   }

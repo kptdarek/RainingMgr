@@ -876,7 +876,6 @@ void UIMgr::AddAlarm(const __FlashStringHelper* title, byte flags)
       Alarms[exist].cnt ++;
     }
     Alarms[exist].flags = flags | ALARM_UNREAD;
-    Alarms[exist].time = lastTime;
     return;
 
   }
@@ -905,10 +904,10 @@ bool UIMgr::Beep()
 }
 
 
-// XX_XX = 0, NO_NO = 1, NO_XX = 2, XX_NO = 3 , NZ_XX = 4, XX_NZ = 5
+// XX_XX = 0, NO_NO = 1,NZ_NZ = 2, NO_XX = 3, XX_NO = 4 , NZ_XX = 5, XX_NZ = 6
 void UIMgr::ShowStatus()
 {
-  const __FlashStringHelper* valves[] = {F("----"), F("NoNo"), F("No--"), F("--No"), F("Nz--"), F("--Nz")};
+  const __FlashStringHelper* valves[] = {F("----"), F("NoNo"), F("NzNz"),F("No--"), F("--No"), F("Nz--"), F("--Nz")};
   Configuration& cfg = Config::Get();
   lcd.clear();
   lcd.setCursor(0, 0);

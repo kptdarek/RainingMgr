@@ -140,7 +140,7 @@ void DoTestMenu()
 void DoValvesCfg()
 {
   Configuration& cfg = Config::Get();
-  const __FlashStringHelper* valvest[] = {F("WYL WYL"), F("NO NO"), F("NO WYL"), F("WYL NO"), F("NZ WYL"), F("WYL NZ")};
+  const __FlashStringHelper* valvest[] = {F("WYL WYL"), F("NO-NO") , F("NZ||NZ"), F("NO WYL"), F("WYL NO"), F("NZ WYL"), F("WYL NZ")};
   int cfgIndex = ui.Menu(F("Podl. zawory"), valvest, sizeof(valvest) / sizeof(__FlashStringHelper*), cfg.ValvesConfig);
   if (cfgIndex != -1)
   {

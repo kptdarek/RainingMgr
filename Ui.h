@@ -41,8 +41,8 @@ enum FlowType
 enum Task2Do
 {
   NoneTask,
-  Time15MinPlus,
-  Time15MinMinus,
+  MinusTask,
+  PlusTask,
   MainMenu,
   Back
 };
@@ -81,6 +81,7 @@ class UIMgr
     byte lastFlowA;
     byte lastPowerPrecent;
     unsigned long lastTime;
+    unsigned long lastTimeBackLightOn;
 
     double lastT1;
     double lastT2;
@@ -90,6 +91,7 @@ class UIMgr
     byte alarmIndex;
     bool alarmShowMode;
     bool antifrezModeLedOn;
+    bool backlightOn;
     Valves* valves;
   public:
     UIMgr();
@@ -123,6 +125,10 @@ class UIMgr
     bool IsAnyAlarm();
     bool Beep();
     void WaitKeyUp();
+    void BacklightOff();
+    void BacklightOn();
+      bool IsBacklightOn();
+    void PingScreenSave();
   protected:
     KeybordKeys GetPressed();
 
@@ -140,6 +146,8 @@ class UIMgr
     void PrintTime(int minuts );
     byte currAlarmIndex(const __FlashStringHelper* title);
     byte GetlastActiveAlarm();
+    void checkScreenSave();
+
 };
 
 

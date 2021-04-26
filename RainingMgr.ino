@@ -232,7 +232,7 @@ void DoAlarmsMenu()
 
 void DoSettingsMenu()
 {
-  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Opoz kwit okres") , F("Max min cewki"),  F("Zapisz"), F("Przywroc"), F("Zeruj liczn."), F("Reset")};
+  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Opoz kwit okres") , F("Max min cewki"),  F("Zapisz"), F("Przywroc"), F("Zeruj liczn.")};
   int index;
   do {
     index = ui.Menu(F("Ustawienia"), items, sizeof(items) / sizeof(__FlashStringHelper*));
@@ -269,10 +269,7 @@ void DoSettingsMenu()
         break;
       case 9:
         Config::SetTotalWater(0);
-        totalWaterAll = 0;
-        break;
-      case 10:
-        asm volatile ("  jmp 0");
+        totalWaterAll = 0;      
     }
   } while (index != -1);
 }
@@ -288,36 +285,66 @@ void DoFixedMode()
   }
 }
 
+void ClearHistory()
+{
+   ui.ResetHistory();
+   ui.ResetAlarms();
+   Config::SetTotalWater(totalWaterAll + (long)totalWater);
+   totalWater = 0.0;  
+   ui.Beep();
+   delay(250);
+   ui.Beep();
+   delay(250);
+   ui.Beep();
+}
+
+void DoStartMenu()
+{
+  const __FlashStringHelper* items[] = {F("Zerowanie"), F("Sym temp. 50%"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz") : F("Opoz kwitnien"), F("Pol automat")};
+  int index = ui.Menu(F("Meni glowne"), items, sizeof(items) / sizeof(__FlashStringHelper*));
+  switch (index)
+  {
+    case 0:
+      ClearHistory();
+    case 1:
+      forceTemp = dynaSensors1.GetTempFromMode(SS25);
+    break;
+    case 2:
+      SetMode(currentMode == WmDeleayFolowering ? WmNone : WmDeleayFolowering);
+      break;
+    case 3: 
+    DoHalfAutoMode(items[index]);
+      break;     
+  }  
+}
+
 void DoMainMenu()
 {
-  const __FlashStringHelper* items[] = {F("Alarmy"), F("Status"), F("Hisoria"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz") : F("Opoz kwitnien"), F("Pol automat"), F("Ustawienia"),  F("Symulacje"),  F("#FIX Bajp/Zamk")};
+  const __FlashStringHelper* items[] = {F("Start"), F("Alarmy"), F("Status"), F("Hisoria"), F("Ustawienia"),  F("Symulacje"),  F("#FIX Bajp/Zamk")};
   int index = ui.Menu(F("Meni glowne"), items, sizeof(items) / sizeof(__FlashStringHelper*) -  (valves.CanSetFixedMode() ? 0 : 1));
 
   switch (index)
   {
     case 0:
-      if (ui.IsAnyAlarm()) ui.CheckAlarms();
+      DoStartMenu();
       break;
     case 1:
+      if (ui.IsAnyAlarm()) ui.CheckAlarms();
+      break;
+    case 2:
       Config::SetTotalWater(totalWaterAll + (long)totalWater);
       ui.ShowStatus();
       break;
-    case 2:
-      ui.History();
-      break;
     case 3:
-      SetMode(currentMode == WmDeleayFolowering ? WmNone : WmDeleayFolowering);
-      break;
+      ui.History();
+      break;    
     case 4:
-      DoHalfAutoMode(items[index]);
-      break;
-    case 5:
       DoSettingsMenu();
       break;
-    case 6:
+    case 5:
       DoTestMenu();
       break;
-    case 7:
+    case 6:
       DoFixedMode();
       break;
   }

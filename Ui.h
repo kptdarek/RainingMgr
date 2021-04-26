@@ -112,6 +112,7 @@ class UIMgr
     void Cls();
     void ShowMode(WorkMode mode);
     void  ResetHistory();
+    void ResetAlarms();
     void History();
     void CheckAlarms();
 #if DEBUG    

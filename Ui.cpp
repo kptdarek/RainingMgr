@@ -117,21 +117,28 @@ UIMgr::UIMgr(): lcd(0x27, 16, 2)
 {
   lastTime = 0;
   lastFlowA = 0;
-  hisotryIndex = 0;
-  alarmIndex = 0;
+  
   alarmShowMode = false;
   antifrezModeLedOn = false;
   lastTimeBackLightOn = 0;
 
-  for (int i = 0 ; i < ALARM_SIZE; i++)
-  {
-    Alarms[i].msg = NULL;
-  }
+  ResetAlarms();
   ResetHistory();
   ResetTempHisotry();
 }
+
+void  UIMgr::ResetAlarms()
+{
+  alarmIndex = 0;
+ for (int i = 0 ; i < ALARM_SIZE; i++)
+  {
+    Alarms[i].msg = NULL;
+  }
+}
+
 void  UIMgr::ResetHistory()
 {
+  hisotryIndex = 0;
   for (int i = 0 ; i < HISTORY_SIZE; i++)
   {
     history[i].time = 0;

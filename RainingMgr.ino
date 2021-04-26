@@ -15,7 +15,7 @@ Valves valves;
 double minNoErrorTemp = -30.0;
 double forceTemp = -100.0;
 bool firstIter = true;
-byte avrFlow = 0;
+byte avrFlowX10  = 0;
 byte sensorInterrupt = 0;  // 0 = digital pin 2
 byte sensorPin       = 2;
 int pulseCount = 0;
@@ -478,7 +478,7 @@ void loop()
   ui.SetTemperature(t2, BottomT);
 
   int flow = sensors->GetFlow();
-  ui.SetFlow(flow, CurrentV);
+  ui.SetCurrentFlow(flow);
   byte secHash = (byte)(long)(mils / 1000l) % 60L;
 
   if (secHash != avrFlowSecondHash) { //only onece a seconds
@@ -488,7 +488,7 @@ void loop()
     avrFlowSum += flow; avrFlowSamples++;
     if (avrFlowSamples >=  ((currentMode == WmDeleayFolowering) ? cfg.DelayFlowerMinutsPeriod * 60 : cfg.AntiFreezePeriod))
     {
-      avrFlow = avrFlowSum / avrFlowSamples;
+      avrFlowX10  = avrFlowSum * 10 / avrFlowSamples;
 
       unsigned long secs = (mils - lastChekAvrFlowMillis) / 1000L;
       totalWater += (double)((double)avrFlowSum / (double)avrFlowSamples) * ((double)secs / 60.0f);
@@ -509,7 +509,7 @@ void loop()
       valves.SetFlow(flow);
     }
     
-    ui.SetFlow(avrFlow , AverageF);
+    ui.SetAvargeFlowX10(avrFlowX10);
 
     VAlarm alrm = valves.PeekAlarm();
     if (alrm.title != NULL)

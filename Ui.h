@@ -32,12 +32,6 @@ enum Termometr
   BottomT
 };
 
-enum FlowType
-{
-  AverageF,
-  CurrentV
-};
-
 enum Task2Do
 {
   NoneTask,
@@ -97,8 +91,9 @@ class UIMgr
     UIMgr();
     void Setup(Valves* v);
     void SetTemperature(double t, Termometr instance, bool showTrend = true);
-    void SetTime(unsigned long timeFrom24, bool saveHisotry = true);
-    void SetFlow(byte value, FlowType type);
+    void SetTime(unsigned long timeFrom24, bool saveHisotry = true);    
+    void SetAvargeFlowX10(byte value);    
+    void SetCurrentFlow(byte value);    
     void SetPowerPrecent(byte value, bool halfAuto = false);
     int Menu(const __FlashStringHelper* title, const __FlashStringHelper* items[], int cnt, int currIndex = 0);
     int SetValue(const __FlashStringHelper* title, int old, int change = 1);

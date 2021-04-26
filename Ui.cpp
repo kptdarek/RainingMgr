@@ -264,30 +264,44 @@ void UIMgr::SaveHistoryItem(unsigned long timeFrom24)
   hisotryIndex =  hisotryPlus(hisotryIndex );
 }
 
-void UIMgr::SetFlow(byte value, FlowType type)
+void UIMgr::SetAvargeFlowX10(byte value)
 {
-
-  if ( value != (type == AverageF ? lastFlowA : lastFlowC))
-  {
-    int line = 0;
-    if ( type == AverageF)
-    {
-      lastFlowA = value;
-    } else
-    {
-      lastFlowC = value;
-      line = 1;
-    }
+  if ( value != lastFlowA)
+  {    
+    lastFlowA = value;    
     if (!alarmShowMode)
     {
-      lcd.setCursor(6, line);
+      lcd.setCursor(6, 0);
       lcd.print(F("   "));
-      lcd.setCursor(6, line);
+      lcd.setCursor(6, 0);
+      if (value > 10)
+      {
+        lcd.print(value / 10);
+      } else {
+        lcd.print(F("."));
+        lcd.print(value);
+      }
+      lcd.print(LITER_P_MIN_C);
+    }
+  }
+}
+
+void UIMgr::SetCurrentFlow(byte value)
+{
+  if ( value != lastFlowC)
+  {    
+    lastFlowC = value;
+    if (!alarmShowMode)
+    {
+      lcd.setCursor(6, 1);
+      lcd.print(F("   "));
+      lcd.setCursor(6, 1);
       lcd.print(value);
       lcd.print(LITER_P_MIN_C);
     }
   }
 }
+
 
 void UIMgr::SetPowerPrecent(byte value, bool halfAuto)
 {
@@ -701,7 +715,7 @@ void  UIMgr::History(byte index)
   SetTime(history[index].time, false);
   SetTemperature(t1, TopT, false);
   SetTemperature(t2, BottomT, false);
-  SetFlow(history[index].flowA, AverageF);
+  SetAvargeFlowX10(history[index].flowA);
   SetPowerPrecent(history[index].PowerPrec);
 
   byte prev = historyMinus(index);

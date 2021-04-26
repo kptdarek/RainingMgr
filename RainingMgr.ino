@@ -427,6 +427,7 @@ void loop()
   sensors->RequestTemps();
   unsigned long mils = (millis() EXTRA_MILLIS);
 
+  bool skipCheckFlow = false;
   Task2Do task = ui.ProcessKeys();
   switch (task)
   {
@@ -437,10 +438,10 @@ void loop()
       PressBottomKey();
       break;
     case MainMenu:
-      DoMainMenu();
+      DoMainMenu();skipCheckFlow = true;
       break;
     case Back:
-      PressSmartKey();
+      PressSmartKey();skipCheckFlow = true;
   };
 
 
@@ -503,7 +504,11 @@ void loop()
       avrFlowSum = avrFlowSamples = 0;
     }
 
-    valves.SetFlow(flow);
+    if (!skipCheckFlow)
+    {
+      valves.SetFlow(flow);
+    }
+    
     ui.SetFlow(avrFlow , AverageF);
 
     VAlarm alrm = valves.PeekAlarm();

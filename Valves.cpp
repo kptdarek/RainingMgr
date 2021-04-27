@@ -158,9 +158,60 @@ void  Valves::SetFlow(byte flow)
   if (lastChangeSeconds != -1 && seconds - lastChangeSeconds > 2)
   {
     lastChangeSeconds = seconds + 67;// sprawdzamy znów za 67 s czy zgada się przepływ
-    if (openFlowStatus == OFOpen && flow < 1) Alarm(F("Brak przeplywu"), ALARM_FLOW);
-    if (openFlowStatus == OFClose && flow > 0) Alarm(F("Zbedny przeplyw"), ALARM_FLOW);
+    if (openFlowStatus == OFOpen && flow < 1)
+    {
+      if (CheckDisableValve(false))
+      {
+        Alarm(F("Brak przeplywu"), ALARM_FLOW);
+      }
+    }
+
+    if (openFlowStatus == OFClose && flow > 0)
+    {
+      if (CheckDisableValve(true))
+      {
+        Alarm(F("Zbedny przeplyw"), ALARM_FLOW);
+      }
+    }
   }
+}
+
+bool  Valves::CheckDisableValve(bool flowExist)
+{
+  Configuration& cfg = Config::Get();
+  if (cfg.AutoDisableValveIfError)
+  {
+    if (cfg.ValvesConfig == NZ_NZ && !flowExist)
+    {
+      Alarm(F("Wył zawor NZ!!"), ALARM_FLOW);
+
+      if (lastChanelUsed == OCSecond)
+      {
+        cfg.ValvesConfig = NZ_XX;
+      } else
+      {
+        cfg.ValvesConfig = XX_NZ;
+      }
+
+      ResetFlowStatus();
+      return false;
+    }
+    if (cfg.ValvesConfig == NO_NO && flowExist)
+    {
+      Alarm(F("Wył zawor NO!!"), ALARM_FLOW);
+
+      if (lastChanelUsed == OCSecond)
+      {
+        cfg.ValvesConfig = NO_XX;
+      } else
+      {
+        cfg.ValvesConfig = XX_NO;
+      }
+      ResetFlowStatus();
+      return false;
+    }
+  }
+  return true;
 }
 
 void Valves::Adjust()

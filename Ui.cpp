@@ -117,7 +117,7 @@ UIMgr::UIMgr(): lcd(0x27, 16, 2)
 {
   lastTime = 0;
   lastFlowA = 0;
-  
+
   alarmShowMode = false;
   antifrezModeLedOn = false;
   lastTimeBackLightOn = 0;
@@ -130,7 +130,7 @@ UIMgr::UIMgr(): lcd(0x27, 16, 2)
 void  UIMgr::ResetAlarms()
 {
   alarmIndex = 0;
- for (int i = 0 ; i < ALARM_SIZE; i++)
+  for (int i = 0 ; i < ALARM_SIZE; i++)
   {
     Alarms[i].msg = NULL;
   }
@@ -267,8 +267,8 @@ void UIMgr::SaveHistoryItem(unsigned long timeFrom24)
 void UIMgr::SetAvargeFlowX10(byte value)
 {
   if ( value != lastFlowA)
-  {    
-    lastFlowA = value;    
+  {
+    lastFlowA = value;
     if (!alarmShowMode)
     {
       lcd.setCursor(6, 0);
@@ -289,7 +289,7 @@ void UIMgr::SetAvargeFlowX10(byte value)
 void UIMgr::SetCurrentFlow(byte value)
 {
   if ( value != lastFlowC)
-  {    
+  {
     lastFlowC = value;
     if (!alarmShowMode)
     {
@@ -921,7 +921,7 @@ bool UIMgr::Beep()
 // XX_XX = 0, NO_NO = 1,NZ_NZ = 2, NO_XX = 3, XX_NO = 4 , NZ_XX = 5, XX_NZ = 6
 void UIMgr::ShowStatus()
 {
-  const __FlashStringHelper* valves[] = {F("----"), F("NoNo"), F("NzNz"),F("No--"), F("--No"), F("Nz--"), F("--Nz")};
+  const __FlashStringHelper* valves[] = {F("----"), F("NoNo"), F("NzNz"), F("No--"), F("--No"), F("Nz--"), F("--Nz")};
   Configuration& cfg = Config::Get();
   lcd.clear();
   lcd.setCursor(0, 0);

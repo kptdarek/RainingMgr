@@ -42,6 +42,7 @@ struct Configuration
   float DelayStop;
   bool HalfAutomaticMode;
   float T1OnSunDelta;  
+  bool AutoDisableValveIfError;
 };
 
 class Config

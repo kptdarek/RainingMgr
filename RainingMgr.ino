@@ -232,7 +232,7 @@ void DoAlarmsMenu()
 
 void DoSettingsMenu()
 {
-  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Opoz kwit okres") , F("Max min cewki"),  F("Zapisz"), F("Przywroc"), F("Zeruj liczn.")};
+  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Opoz kwit okres") , F("Max min cewki"),F("Auto wył zaworu"),  F("Zapisz"), F("Przywroc"), F("Zeruj liczn.")};
   int index;
   do {
     index = ui.Menu(F("Ustawienia"), items, sizeof(items) / sizeof(__FlashStringHelper*));
@@ -262,12 +262,14 @@ void DoSettingsMenu()
         cfg.ValMaxWorkMin = ui.SetValue(items[index], cfg.ValMaxWorkMin);//TODO zmienic na 5
         break;
       case 7:
+        cfg.AutoDisableValveIfError = ui.SetValue(items[index], cfg.AutoDisableValveIfError);
+      case 8:
         Config::Save();//ok
         break;
-      case 8:
+      case 9:
         Config::Init();
         break;
-      case 9:
+      case 10:
         Config::SetTotalWater(0);
         totalWaterAll = 0;      
     }

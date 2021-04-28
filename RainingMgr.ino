@@ -381,7 +381,7 @@ void PressSmartKey()
 
   if (ui.IsActiveAlarm())
   {
-    ui.CheckAlarms();
+    ui.CheckAlarms(true);
     return;
   }
 

@@ -110,7 +110,7 @@ class UIMgr
     void  ResetHistory();
     void ResetAlarms();
     void History();
-    void CheckAlarms();
+    void CheckAlarms(bool showLastActive = false);
 #if DEBUG    
     void TestLeds();
 #endif    

@@ -650,9 +650,16 @@ void UIMgr::History()
   Invalidate();
 }
 
-void UIMgr::CheckAlarms()
+void UIMgr::CheckAlarms(bool showLastActive)
 {
   byte index = alarmIndex;
+
+  if (showLastActive)
+  {
+    index = GetlastActiveAlarm();
+    if (index == 255) index = alarmIndex;    
+  }
+  
   bool invalidate = true;
   WaitKeyUp();
 
@@ -823,7 +830,7 @@ byte UIMgr::GetlastActiveAlarm()
     if (Alarms[index].flags & ALARM_UNREAD) return index;
     index = alarmMinus(index);
   }
-  return false;
+  return 255;
 }
 
 void UIMgr::ShowLastAlarm(bool show)

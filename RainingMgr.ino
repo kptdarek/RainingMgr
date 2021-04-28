@@ -306,7 +306,7 @@ void ClearHistory()
 
 void DoStartMenu()
 {
-  const __FlashStringHelper* items[] = {F("Zerowanie"), F("Sym temp. 50%"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz") : F("Opoz kwitnien"), F("Pol automat")};
+  const __FlashStringHelper* items[] = {F("Zerowanie"), F("Sym temp. 50%"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz") : F("Opoz kwitnien"), F("Pol automat"), F("Temp cfg info")};
   int index = ui.Menu(F("Meni glowne"), items, sizeof(items) / sizeof(__FlashStringHelper*));
   switch (index)
   {
@@ -321,6 +321,9 @@ void DoStartMenu()
     case 3: 
     DoHalfAutoMode(items[index]);
       break;     
+    case 4:
+      ui.ShowTempCfgStatus();
+      break;
   }  
 }
 

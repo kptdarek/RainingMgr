@@ -958,6 +958,34 @@ void UIMgr::ShowStatus()
   Invalidate();
 }
 
+void UIMgr::ShowTempCfgStatus()
+{
+  Configuration& cfg = Config::Get();
+  lcd.clear();
+  lcd.setCursor(0, 0); 
+  lcd.print(F("R<"));
+  lcd.print(cfg.ValMaxWorkMin); //4
+  lcd.print(F(" T"));//2
+  lcd.print(abs(cfg.AntiFrezTemp),1);
+  lcd.print(F("|"));//4
+  lcd.print(abs(cfg.DelayStop),1);
+  lcd.print(DEGR_CELC_C);//4
+
+  lcd.setCursor(0, 1);    
+  lcd.print(abs(cfg.Go25Temp),1);
+  lcd.print(F("<"));//4
+  lcd.print(abs(cfg.Go50Temp),1);
+  lcd.print(F("<"));//4
+  lcd.print(abs(cfg.Go75Temp),1);
+  lcd.print(F("<"));//4
+  lcd.print(abs(cfg.Go100Temp),1);
+  lcd.print(DEGR_CELC_C);//4
+    
+  delay(3000);
+  WaitKeyUp();
+  Invalidate();
+}
+
 void UIMgr::BacklightOff()
 {
   lcd.noBacklight(); backlightOn = false;

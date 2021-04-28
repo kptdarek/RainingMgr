@@ -104,6 +104,7 @@ class UIMgr
     void Print(const __FlashStringHelper* title, byte line = 0);
     void Print(int i); 
     void ShowStatus();
+    void ShowTempCfgStatus();
     void Cls();
     void ShowMode(WorkMode mode);
     void  ResetHistory();

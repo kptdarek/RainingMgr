@@ -232,7 +232,7 @@ void DoAlarmsMenu()
 
 void DoSettingsMenu()
 {
-  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Opoz kwit okres") , F("Max min cewki"),F("Auto wył zaworu"),F("Min przeplyw"), F("Zapisz"), F("Przywroc"), F("Zeruj liczn.")};
+  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Opoz kwit okres") , F("Max min cewki"),F("Auto wyl zaw"),F("Min przeplyw"), F("Zapisz"), F("Przywroc"), F("Zeruj liczn.")};
   int index;
   do {
     index = ui.Menu(F("Ustawienia"), items, sizeof(items) / sizeof(__FlashStringHelper*));
@@ -307,11 +307,12 @@ void ClearHistory()
 void DoStartMenu()
 {
   const __FlashStringHelper* items[] = {F("Zerowanie"), F("Sym temp. 50%"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz") : F("Opoz kwitnien"), F("Pol automat"), F("Temp cfg info")};
-  int index = ui.Menu(F("Meni glowne"), items, sizeof(items) / sizeof(__FlashStringHelper*));
+  int index = ui.Menu(F("Meni start"), items, sizeof(items) / sizeof(__FlashStringHelper*));
   switch (index)
   {
     case 0:
       ClearHistory();
+      break;
     case 1:
       forceTemp = dynaSensors1.GetTempFromMode(SS50);
     break;

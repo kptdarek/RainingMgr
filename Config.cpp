@@ -25,6 +25,7 @@ void Config::Init()
   cfg.HalfAutomaticMode = false;
   cfg.T1OnSunDelta = 3;
   cfg.FlowAlarmThreshold = 1;
+  cfg.AutoDisableValveIfError = false;
 }
 
 Configuration& Config::Get()
@@ -40,7 +41,12 @@ void Config::Load()
   if (cfg.AntiFreezePeriod == -1) Init();
   if (cfg.ValMaxWorkMin < 3) cfg.ValMaxWorkMin = 3;
   if (isnan(cfg.T1OnSunDelta) || !(cfg.T1OnSunDelta > 2 && cfg.T1OnSunDelta < 15))  cfg.T1OnSunDelta = 3;
-  if (cfg.FlowAlarmThreshold < 1) cfg.FlowAlarmThreshold = 1;;
+  if (cfg.FlowAlarmThreshold < 1) cfg.FlowAlarmThreshold = 1;
+   if (cfg.FlowAlarmThreshold > 50)
+   {
+    cfg.FlowAlarmThreshold = 1;
+    cfg.AutoDisableValveIfError = false;
+   }
 }
 
 void Config::Save()

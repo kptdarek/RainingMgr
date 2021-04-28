@@ -274,7 +274,7 @@ void UIMgr::SetAvargeFlowX10(byte value)
       lcd.setCursor(6, 0);
       lcd.print(F("   "));
       lcd.setCursor(6, 0);
-      if (value > 10)
+      if (value > 10 || value == 0)
       {
         lcd.print(value / 10);
       } else {

@@ -21,7 +21,7 @@ void Config::Init()
   cfg.DelayFlower100Temp = 16.0f;
   cfg.ValMaxWorkMin = 30;
   cfg.Sensors = 0;
-  cfg.DelayStop = 2.5;
+  cfg.DelayStop = 3.0;
   cfg.HalfAutomaticMode = false;
   cfg.T1OnSunDelta = 3;
   cfg.FlowAlarmThreshold = 1;

@@ -313,7 +313,7 @@ void DoStartMenu()
     case 0:
       ClearHistory();
     case 1:
-      forceTemp = dynaSensors1.GetTempFromMode(SS25);
+      forceTemp = dynaSensors1.GetTempFromMode(SS50);
     break;
     case 2:
       SetMode(currentMode == WmDeleayFolowering ? WmNone : WmDeleayFolowering);

@@ -157,8 +157,10 @@ void  Valves::SetFlow(byte flow)
 
   if (lastChangeSeconds != -1 && seconds - lastChangeSeconds > 2)
   {
+    Configuration& cfg = Config::Get();
+    
     lastChangeSeconds = seconds + 67;// sprawdzamy znów za 67 s czy zgada się przepływ
-    if (openFlowStatus == OFOpen && flow < 1)
+    if (openFlowStatus == OFOpen && flow < cfg.FlowAlarmThreshold)
     {
       if (CheckDisableValve(false))
       {

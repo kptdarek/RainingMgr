@@ -932,9 +932,9 @@ void UIMgr::ShowStatus()
   lcd.print(F(" R"));
 #endif
 
-  lcd.print(F("<"));
-  lcd.print(cfg.ValMaxWorkMin);
-  lcd.print(F(" "));
+  lcd.print(F(">"));
+  lcd.print(cfg.FlowAlarmThreshold);
+  lcd.print(LITER_P_MIN_C);
   lcd.print(cfg.Alarms & ALARM_SOUNDS ? SND_C : NOSND_C);
   lcd.print(cfg.Alarms & ALARM_INFO ? F("I") : F("-"));
   lcd.print(cfg.Alarms & ALARM_FLOW ? F("P") : F("-"));
@@ -944,10 +944,8 @@ void UIMgr::ShowStatus()
 
   lcd.setCursor(0, 1);
   lcd.print((millis() EXTRA_MILLIS) / 1000 / 60 / 60);
-  lcd.print(F(":"));
-  lcd.print((millis() EXTRA_MILLIS) / 1000 / 60 % 60);
-
-
+  lcd.print(F("h"));
+  
   lcd.print(F(" "));
   lcd.print(Config::GetTotalWater());
   lcd.print(F("/"));

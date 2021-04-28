@@ -43,6 +43,7 @@ struct Configuration
   bool HalfAutomaticMode;
   float T1OnSunDelta;  
   bool AutoDisableValveIfError;
+  unsigned char FlowAlarmThreshold;
 };
 
 class Config

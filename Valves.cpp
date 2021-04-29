@@ -158,13 +158,18 @@ void  Valves::SetFlow(byte flow)
   if (lastChangeSeconds != -1 && seconds - lastChangeSeconds > 2)
   {
     Configuration& cfg = Config::Get();
-    
+
     lastChangeSeconds = seconds + 67;// sprawdzamy znów za 67 s czy zgada się przepływ
     if (openFlowStatus == OFOpen && flow < cfg.FlowAlarmThreshold)
     {
       if (CheckDisableValve(false))
       {
-        Alarm(F("Brak przeplywu"), ALARM_FLOW);
+        if (curentMode == ValAntiFreeze)
+        {
+          Alarm(F("Wlacz wode!"), ALARM_FLOW);
+        } else {
+          Alarm(F("Brak przeplywu"), ALARM_FLOW);
+        }
       }
     }
 
@@ -180,6 +185,7 @@ void  Valves::SetFlow(byte flow)
 
 bool  Valves::CheckDisableValve(bool flowExist)
 {
+  if (curentMode == ValAntiFreeze) return true;// dla antifreez nie wylaczamy
   Configuration& cfg = Config::Get();
   if (cfg.AutoDisableValveIfError)
   {

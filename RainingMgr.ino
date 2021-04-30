@@ -232,7 +232,7 @@ void DoAlarmsMenu()
 
 void DoSettingsMenu()
 {
-  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Opoz kwit okres") , F("Max min cewki"),F("Auto wyl zaw"),F("Min przeplyw"), F("Zapisz"), F("Przywroc"), F("Zeruj liczn.")};
+  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Opoz kwit okres") , F("Max min cewki"), F("Auto wyl zaw"), F("Min przeplyw"), F("Zapisz"), F("Przywroc"), F("Zeruj liczn.")};
   int index;
   do {
     index = ui.Menu(F("Ustawienia"), items, sizeof(items) / sizeof(__FlashStringHelper*));
@@ -265,7 +265,7 @@ void DoSettingsMenu()
         cfg.AutoDisableValveIfError = ui.SetValue(items[index], cfg.AutoDisableValveIfError);
         break;
       case 8:
-        cfg.FlowAlarmThreshold= ui.SetValue(items[index], cfg.FlowAlarmThreshold);
+        cfg.FlowAlarmThreshold = ui.SetValue(items[index], cfg.FlowAlarmThreshold);
         break;
       case 9:
         Config::Save();//ok
@@ -275,7 +275,7 @@ void DoSettingsMenu()
         break;
       case 11:
         Config::SetTotalWater(0);
-        totalWaterAll = 0;      
+        totalWaterAll = 0;
     }
   } while (index != -1);
 }
@@ -293,15 +293,15 @@ void DoFixedMode()
 
 void ClearHistory()
 {
-   ui.ResetHistory();
-   ui.ResetAlarms();
-   Config::SetTotalWater(totalWaterAll + (long)totalWater);
-   totalWater = 0.0;  
-   ui.Beep();
-   delay(250);
-   ui.Beep();
-   delay(250);
-   ui.Beep();
+  ui.ResetHistory();
+  ui.ResetAlarms();
+  Config::SetTotalWater(totalWaterAll + (long)totalWater);
+  totalWater = 0.0;
+  ui.Beep();
+  delay(250);
+  ui.Beep();
+  delay(250);
+  ui.Beep();
 }
 
 void DoStartMenu()
@@ -315,17 +315,17 @@ void DoStartMenu()
       break;
     case 1:
       forceTemp = dynaSensors1.GetTempFromMode(SS50);
-    break;
+      break;
     case 2:
       SetMode(currentMode == WmDeleayFolowering ? WmNone : WmDeleayFolowering);
       break;
-    case 3: 
-    DoHalfAutoMode(items[index]);
-      break;     
+    case 3:
+      DoHalfAutoMode(items[index]);
+      break;
     case 4:
       ui.ShowTempCfgStatus();
       break;
-  }  
+  }
 }
 
 void DoMainMenu()
@@ -347,7 +347,7 @@ void DoMainMenu()
       break;
     case 3:
       ui.History();
-      break;    
+      break;
     case 4:
       DoSettingsMenu();
       break;
@@ -435,7 +435,6 @@ void loop()
   static byte t2RetryCnt = 0;
   Configuration& cfg = Config::Get();
   sensors->RequestTemps();
-  unsigned long mils = (millis() EXTRA_MILLIS);
 
   bool skipCheckFlow = false;
   Task2Do task = ui.ProcessKeys();
@@ -448,13 +447,13 @@ void loop()
       PressBottomKey();
       break;
     case MainMenu:
-      DoMainMenu();skipCheckFlow = true;
+      DoMainMenu(); skipCheckFlow = true;
       break;
     case Back:
-      PressSmartKey();skipCheckFlow = true;
+      PressSmartKey(); skipCheckFlow = true;
   };
 
-
+  unsigned long mils = (millis() EXTRA_MILLIS);
   if (mils - lastPulsMillis > FLOW_SAMPLE_MILLIS )
   {
     sensors->SetFlowPulses(pulseCount, mils - lastPulsMillis);
@@ -518,7 +517,7 @@ void loop()
     {
       valves.SetFlow(flow);
     }
-    
+
     ui.SetAvargeFlowX10(avrFlowX10);
 
     VAlarm alrm = valves.PeekAlarm();

@@ -199,7 +199,7 @@ void SetAlaramFlags(const __FlashStringHelper* title, byte bit)
 
 void DoAlarmsMenu()
 {
-  const __FlashStringHelper* items[] = {F("Al. Przeplyw"), F("Al. Cewka"), F("Al. Informa"), F("Al. termometr"), F("Al. dzwieki"), F("Al. Wszytkie")};
+  const __FlashStringHelper* items[] = {F("Przeplyw"), F("Cewka"), F("Informacje"), F("Termometr"), F("Dzwieki"), F("Wszystkie")};
   int index;
   do {
     index = ui.Menu(F("Alarmy"), items, sizeof(items) / sizeof(__FlashStringHelper*));
@@ -232,7 +232,7 @@ void DoAlarmsMenu()
 
 void DoSettingsMenu()
 {
-  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Opoz kwit okres") , F("Max min cewki"), F("Auto wyl zaw"), F("Min przeplyw"), F("Zapisz"), F("Przywroc"), F("Zeruj liczn.")};
+  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Opoz kwit okres") , F("Max min cewki"), F("Auto wyl zaw"), F("Min przeplyw"), F("Zapisz"), F("Przywr fabr"), F("Zeruj liczn.")};
   int index;
   do {
     index = ui.Menu(F("Ustawienia"), items, sizeof(items) / sizeof(__FlashStringHelper*));
@@ -306,7 +306,7 @@ void ClearHistory()
 
 void DoStartMenu()
 {
-  const __FlashStringHelper* items[] = {F("Zerowanie"), F("Sym temp. 50%"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz") : F("Opoz kwitnien"), F("Pol automat"), F("Temp cfg info")};
+  const __FlashStringHelper* items[] = {F("Zerowanie"), F("Sym temp. 50%"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz") : F("Opoz kwitnien"), F("Polautomat"), F("Temp cfg info")};
   int index = ui.Menu(F("Meni start"), items, sizeof(items) / sizeof(__FlashStringHelper*));
   switch (index)
   {
@@ -330,7 +330,7 @@ void DoStartMenu()
 
 void DoMainMenu()
 {
-  const __FlashStringHelper* items[] = {F("Start"), F("Alarmy"), F("Status"), F("Hisoria"), F("Ustawienia"),  F("Symulacje"),  F("#FIX Bajp/Zamk")};
+  const __FlashStringHelper* items[] = {F("Start"), F("Alarmy"), F("Status"), F("Historia"), F("Ustawienia"),  F("Symulacje"),  F("#FIX Bajp/Zamk")};
   int index = ui.Menu(F("Meni glowne"), items, sizeof(items) / sizeof(__FlashStringHelper*) -  (valves.CanSetFixedMode() ? 0 : 1));
 
   switch (index)

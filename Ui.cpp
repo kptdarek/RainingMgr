@@ -942,6 +942,7 @@ void UIMgr::ShowStatus()
   lcd.print(F(">"));
   lcd.print(cfg.FlowAlarmThreshold);
   lcd.print(LITER_P_MIN_C);
+  if (cfg.AutoDisableValveIfError) lcd.print(F("*"));
   lcd.print(F(" "));
   lcd.print(cfg.Alarms & ALARM_SOUNDS ? SND_C : NOSND_C);
   lcd.print(cfg.Alarms & ALARM_INFO ? F("I") : F("-"));

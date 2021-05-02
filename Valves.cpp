@@ -9,10 +9,10 @@ int second_chanel = 16;
 
 VAlarm::VAlarm()
 {
-title = NULL;
+  title = NULL;
 }
 
-VAlarm::VAlarm(const __FlashStringHelper* tit,byte typ)
+VAlarm::VAlarm(const __FlashStringHelper* tit, byte typ)
 {
   title = tit;
   type = typ;
@@ -32,7 +32,7 @@ void Valves::Init()
   openFlowStatus = OFUnknown;
   minutsPeriod = 1;
   lastChanelUsed = OCSecond;
-  valHighMinuts = -1;  
+  valHighMinuts = -1;
   fixedMode =  false;
 }
 void Valves::SetMinutsPeriod(int i)
@@ -148,7 +148,7 @@ void Valves::ResetTime()
 
 void  Valves::SetFlow(byte flow)
 {
-   long seconds = (millis() EXTRA_MILLIS) / 1000l;
+  long seconds = (millis() EXTRA_MILLIS) / 1000l;
 
   if (fixedMode && IsNO() && flow > 0)
   {
@@ -157,10 +157,69 @@ void  Valves::SetFlow(byte flow)
 
   if (lastChangeSeconds != -1 && seconds - lastChangeSeconds > 2)
   {
+    Configuration& cfg = Config::Get();
+
     lastChangeSeconds = seconds + 67;// sprawdzamy znów za 67 s czy zgada się przepływ
-    if (openFlowStatus == OFOpen && flow < 1) Alarm(F("Brak przeplywu"), ALARM_FLOW);
-    if (openFlowStatus == OFClose && flow > 0) Alarm(F("Zbedny przeplyw"), ALARM_FLOW);
+    if (openFlowStatus == OFOpen && flow < cfg.FlowAlarmThreshold)
+    {
+      if (CheckDisableValve(false))
+      {
+        if (curentMode == ValAntiFreeze)
+        {
+          Alarm(F("Wlacz wode!"), ALARM_FLOW);
+        } else {
+          Alarm(F("Brak przeplywu"), ALARM_FLOW);
+        }
+      }
+    }
+
+    if (openFlowStatus == OFClose && flow > 0)
+    {
+      if (CheckDisableValve(true))
+      {
+        Alarm(F("Zbedny przeplyw"), ALARM_FLOW);
+      }
+    }
   }
+}
+
+bool  Valves::CheckDisableValve(bool flowExist)
+{
+  if (curentMode == ValAntiFreeze) return true;// dla antifreez nie wylaczamy
+  Configuration& cfg = Config::Get();
+  if (cfg.AutoDisableValveIfError)
+  {
+    if (cfg.ValvesConfig == NZ_NZ && !flowExist)
+    {
+      Alarm(F("Wyl zawor NZ!!"), ALARM_FLOW);
+
+      if (lastChanelUsed == OCSecond)
+      {
+        cfg.ValvesConfig = XX_NZ;
+      } else
+      {
+        cfg.ValvesConfig = NZ_XX;
+      }
+
+      ResetFlowStatus();
+      return false;
+    }
+    if (cfg.ValvesConfig == NO_NO && flowExist)
+    {
+      Alarm(F("Wyl zawor NO!!"), ALARM_FLOW);
+
+      if (lastChanelUsed == OCSecond)
+      {
+        cfg.ValvesConfig = XX_NO;
+      } else
+      {
+        cfg.ValvesConfig = NO_XX;
+      }
+      ResetFlowStatus();
+      return false;
+    }
+  }
+  return true;
 }
 
 void Valves::Adjust()
@@ -174,7 +233,7 @@ void Valves::Adjust()
 
   if (seconds == lastSeconds) return;
 
-   lastSeconds = seconds;
+  lastSeconds = seconds;
 
   if (fixedMode)// fixed się wyłaczy gdy tylko zmieni się tryb!
   {
@@ -216,25 +275,30 @@ void Valves::CheckMaxHigh()
   Configuration& cfg = Config::Get();
   if (lastSeconds - valHighMinuts * 60 > cfg.ValMaxWorkMin * 60)
   {
-    if (cfg.ValvesConfig == NO_NO && openFlowStatus == OFClose)
+    if (cfg.ValvesConfig == NZ_NZ && openFlowStatus == OFOpen)
     {
-      DoChange(false);
+      DoChange(true);
     } else {
-      valHighMinuts = lastSeconds / 60;
-      Alarm(F("Goraca cewka"), ALARM_SELENOID);
+      if (cfg.ValvesConfig == NO_NO && openFlowStatus == OFClose)
+      {
+        DoChange(false);
+      } else {
+        valHighMinuts = lastSeconds / 60;
+        Alarm(F("Goraca cewka"), ALARM_SELENOID);
+      }
     }
   }
 }
 
 bool Valves::NearSelenoidHot()
 {
-  #if SERIAL_PRINT
+#if SERIAL_PRINT
   Serial.print(F("NearSelenoidHot"));
-    Serial.println(valHighMinuts);
+  Serial.println(valHighMinuts);
 #endif
-    if (valHighMinuts == -1) return false;
-    Configuration& cfg = Config::Get();
-    return (lastSeconds - valHighMinuts * 60 > (cfg.ValMaxWorkMin - 2) * 60); //dwie minuty przed alarmem o przegrzaniu cewki  
+  if (valHighMinuts == -1) return false;
+  Configuration& cfg = Config::Get();
+  return (lastSeconds - valHighMinuts * 60 > (cfg.ValMaxWorkMin - 2) * 60); //dwie minuty przed alarmem o przegrzaniu cewki
 }
 
 void Valves::Alarm(const __FlashStringHelper* msg, byte type)
@@ -247,8 +311,8 @@ VAlarm Valves::PeekAlarm()
 {
   const __FlashStringHelper* ret = lastAlarm.title;
   lastAlarm.title = NULL;
-  
-  return VAlarm(ret,lastAlarm.type);
+
+  return VAlarm(ret, lastAlarm.type);
 }
 
 
@@ -281,6 +345,22 @@ void Valves::DoChange(bool open)
   {
     valHighMinuts = !open ? lastSeconds / 60L : -1L;
     if (open)
+    {
+      digitalWrite(first_chanel, LOW );
+      digitalWrite(second_chanel, LOW );
+
+    } else
+    {
+      digitalWrite(first_chanel, lastChanelUsed == OCSecond ? LOW : HIGH);
+      digitalWrite(second_chanel, lastChanelUsed == OCFirst ? LOW : HIGH );
+      lastChanelUsed = lastChanelUsed == OCSecond ? OCFirst : OCSecond;
+    }
+  }
+
+  if (cfg.ValvesConfig == NZ_NZ)
+  {
+    valHighMinuts = open ? lastSeconds / 60L : -1L;
+    if (!open)
     {
       digitalWrite(first_chanel, LOW );
       digitalWrite(second_chanel, LOW );

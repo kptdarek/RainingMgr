@@ -6,10 +6,11 @@ enum ConnValves
 {
   XX_XX = 0,
   NO_NO = 1,
-  NO_XX = 2,
-  XX_NO = 3 ,
-  NZ_XX = 4,
-  XX_NZ = 5
+  NZ_NZ = 2,
+  NO_XX = 3,
+  XX_NO = 4 ,
+  NZ_XX = 5,
+  XX_NZ = 6
 };
 
 #define ALARM_FLOW     0x01
@@ -41,6 +42,8 @@ struct Configuration
   float DelayStop;
   bool HalfAutomaticMode;
   float T1OnSunDelta;  
+  bool AutoDisableValveIfError;
+  unsigned char FlowAlarmThreshold;
 };
 
 class Config

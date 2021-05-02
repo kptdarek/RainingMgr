@@ -191,14 +191,14 @@ bool  Valves::CheckDisableValve(bool flowExist)
   {
     if (cfg.ValvesConfig == NZ_NZ && !flowExist)
     {
-      Alarm(F("Wył zawor NZ!!"), ALARM_FLOW);
+      Alarm(F("Wyl zawor NZ!!"), ALARM_FLOW);
 
       if (lastChanelUsed == OCSecond)
       {
-        cfg.ValvesConfig = NZ_XX;
+        cfg.ValvesConfig = XX_NZ;
       } else
       {
-        cfg.ValvesConfig = XX_NZ;
+        cfg.ValvesConfig = NZ_XX;
       }
 
       ResetFlowStatus();
@@ -206,14 +206,14 @@ bool  Valves::CheckDisableValve(bool flowExist)
     }
     if (cfg.ValvesConfig == NO_NO && flowExist)
     {
-      Alarm(F("Wył zawor NO!!"), ALARM_FLOW);
+      Alarm(F("Wyl zawor NO!!"), ALARM_FLOW);
 
       if (lastChanelUsed == OCSecond)
       {
-        cfg.ValvesConfig = NO_XX;
+        cfg.ValvesConfig = XX_NO;
       } else
       {
-        cfg.ValvesConfig = XX_NO;
+        cfg.ValvesConfig = NO_XX;
       }
       ResetFlowStatus();
       return false;

@@ -974,11 +974,12 @@ void UIMgr::ShowTempCfgStatus()
   lcd.setCursor(0, 0); 
   lcd.print(F("C<"));
   lcd.print(cfg.ValMaxWorkMin); //4
-  lcd.print(F(" T"));//2
+  lcd.print(F(" <"));//2
   lcd.print(abs(cfg.AntiFrezTemp),1);
-  lcd.print(F("|"));//4
+  lcd.print(F(","));
   lcd.print(abs(cfg.DelayStop),1);
-  lcd.print(DEGR_CELC_C);//4
+  lcd.print(F(">"));
+  lcd.print(DEGR_CELC_C);
 
   lcd.setCursor(0, 1);    
   lcd.print(abs(cfg.Go25Temp),1);

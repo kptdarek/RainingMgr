@@ -304,9 +304,22 @@ void ClearHistory()
   ui.Beep();
 }
 
+void ResetCycle()
+{
+   switch (currentMode)
+    {     
+      case   WmAntiFreez:
+        CheckAntiFreezMode(10.0, 10.0, false);
+        break;
+      case WmAntiFreezHalfAuto:
+        CheckAntiFreezMode(10.0, 10.0, true);
+        break;    
+    }
+}
+
 void DoStartMenu()
 {
-  const __FlashStringHelper* items[] = {F("Zerowanie"), F("Sym temp. 50%"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz") : F("Opoz kwitnien"), F("Polautomat"), F("Temp cfg info")};
+  const __FlashStringHelper* items[] = {F("Zerowanie"), F("Sym temp. 50%"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz") : F("Opoz kwitnien"), F("Polautomat"), F("Reset cyklu"), F("Temp cfg info")};
   int index = ui.Menu(F("Meni start"), items, sizeof(items) / sizeof(__FlashStringHelper*));
   switch (index)
   {
@@ -322,7 +335,10 @@ void DoStartMenu()
     case 3:
       DoHalfAutoMode(items[index]);
       break;
-    case 4:
+      case 4:
+        ResetCycle();
+      break;
+    case 5:
       ui.ShowTempCfgStatus();
       break;
   }

@@ -972,7 +972,7 @@ void UIMgr::ShowTempCfgStatus()
   Configuration& cfg = Config::Get();
   lcd.clear();
   lcd.setCursor(0, 0); 
-  lcd.print(F("R<"));
+  lcd.print(F("C<"));
   lcd.print(cfg.ValMaxWorkMin); //4
   lcd.print(F(" T"));//2
   lcd.print(abs(cfg.AntiFrezTemp),1);

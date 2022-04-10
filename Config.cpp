@@ -36,7 +36,7 @@ Configuration& Config::Get()
 void Config::Load()
 {
   EEPROM.get(0, cfg);
-  cfg.flowFactor = 7.29;
+  if (isnan(cfg.flowFactor) || cfg.flowFactor < 1) cfg.flowFactor = 7.29;
   //Init();//do czasu zapisania na EEPROM
   if (cfg.AntiFreezePeriod == -1) Init();
   if (cfg.ValMaxWorkMin < 3) cfg.ValMaxWorkMin = 3;

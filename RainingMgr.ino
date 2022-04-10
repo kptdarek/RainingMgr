@@ -232,7 +232,7 @@ void DoAlarmsMenu()
 
 void DoSettingsMenu()
 {
-  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Opoz kwit okres") , F("Max min cewki"), F("Auto wyl zaw"), F("Min przeplyw"), F("Zapisz"), F("Przywr fabr"), F("Zeruj liczn.")};
+  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Opoz kwit okres") , F("Max min cewki"), F("Auto wyl zaw"), F("Min przeplyw"), F("Kalibr. przep"),F("Zapisz"), F("Przywr fabr"), F("Zeruj liczn.")};
   int index;
   do {
     index = ui.Menu(F("Ustawienia"), items, sizeof(items) / sizeof(__FlashStringHelper*));
@@ -267,13 +267,16 @@ void DoSettingsMenu()
       case 8:
         cfg.FlowAlarmThreshold = ui.SetValue(items[index], cfg.FlowAlarmThreshold);
         break;
-      case 9:
+        case 9:
+        cfg.flowFactor = ui.SetValue(items[index], cfg.flowFactor,0.01f);
+        break;        
+      case 10:
         Config::Save();//ok
         break;
-      case 10:
+      case 11:
         Config::Init();
         break;
-      case 11:
+      case 12:
         Config::SetTotalWater(0);
         totalWaterAll = 0;
     }

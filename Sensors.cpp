@@ -70,7 +70,7 @@ void SensorsBase::RequestTemps()
 void SensorsBase::SetFlowPulses(int cnt, int interval)
 {  Configuration& cfg = Config::Get();
   double pulsPerSeconds = double(cnt) / double(interval) * 1000.0f;
-
-  int f = (int)( pulsPerSeconds / cfg.flowFactor);
+  double fd = (pulsPerSeconds / cfg.flowFactor) + 0.5f; //chcemy srednią
+  int f = (int)(fd);
   flow = f > 254 ? 254 : (byte)f;
   }

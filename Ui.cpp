@@ -4,8 +4,6 @@
 #include "Valves.h"
 #include "Config.h"
 
-#define SCREEN_SAVE_DELAY_MINUTS 5
-
 #define MENU_LIVE_LEN 20  //*500ms
 #define LITER_C char(0)
 #define MENU_TOP_C char(1)
@@ -121,7 +119,6 @@ UIMgr::UIMgr(): lcd(0x27, 16, 2)
   alarmIndex = 0;
   alarmShowMode = false;
   antifrezModeLedOn = false;
-  lastTimeBackLightOn = 0;
 
   for (int i = 0 ; i < ALARM_SIZE; i++)
   {
@@ -160,7 +157,7 @@ void UIMgr::Setup(Valves* v)
     lcd.createChar(i, CCRam);
   }
 
-  lcd.backlight(); backlightOn = true;
+  lcd.backlight();
 
   pinMode(key1_pin, INPUT_PULLUP);
   pinMode(key2_pin, INPUT_PULLUP);
@@ -217,11 +214,7 @@ void UIMgr::SetTime(unsigned long timeFrom24,  bool saveHisotry )
     PrintTime(minuts);
   }
 
-  if (saveHisotry)
-  {
-    lastTime = timeFrom24;
-    checkScreenSave();
-  }
+  if (saveHisotry) lastTime = timeFrom24;
 }
 
 void UIMgr::PrintTime(int minuts )
@@ -317,8 +310,8 @@ void UIMgr::SetPowerPrecent(byte value, bool halfAuto)
 Task2Do UIMgr::ProcessKeys()
 {
   KeybordKeys keys = GetPressed();
-  if (keys & TopKey) return MinusTask;
-  if (keys & BottomKey) return PlusTask;
+  if (keys & TopKey) return Time15MinPlus;
+  if (keys & BottomKey) return Time15MinMinus;
   if (keys & EnterKey) return MainMenu;
   if (keys & BackKey) return Back;
 
@@ -332,8 +325,6 @@ KeybordKeys  UIMgr::GetPressed()
   if (!digitalRead(key2_pin))  result = TopKey;
   if (!digitalRead(key3_pin)) result = BottomKey;
   if (!digitalRead(key4_pin)) result = EnterKey;
-
-  if (result != NoneKey && result != TopKey) PingScreenSave();
   return result;
 }
 
@@ -810,7 +801,6 @@ void UIMgr::ShowLastAlarm(bool show)
   bool on = (IsActiveAlarm() && show);
   if (on != alarmShowMode)
   {
-    BacklightOn();
     alarmShowMode = on;
     lcd.clear();
     if (on)
@@ -938,45 +928,4 @@ void UIMgr::ShowStatus()
   delay(3000);
   WaitKeyUp();
   Invalidate();
-}
-
-void UIMgr::BacklightOff()
-{
-  lcd.noBacklight(); backlightOn = false;
-  lastTimeBackLightOn = 1; //wlaczamy wygaszacz
-}
-bool UIMgr::IsBacklightOn()
-{
-  return backlightOn;
-}
-
-void UIMgr::BacklightOn()//wylaczamy wygaszac
-{
-  lastTimeBackLightOn = 0;
-  if (backlightOn) return;
-  lcd.backlight(); backlightOn = true;
-}
-
-void UIMgr::checkScreenSave()
-{
-  if (lastTimeBackLightOn == 0 || !backlightOn) return;
-  if (lastTime - lastTimeBackLightOn >= SCREEN_SAVE_DELAY_MINUTS)
-  {
-    lcd.noBacklight(); backlightOn = false;
-  }
-}
-
-void UIMgr::PingScreenSave()
-{
-  if (lastTimeBackLightOn == 0)
-  {
-    BacklightOn();
-  } else {
-    if (!backlightOn)
-    {
-      lcd.backlight();
-      backlightOn = true;
-    }
-    lastTimeBackLightOn = lastTime;
-  }
 }

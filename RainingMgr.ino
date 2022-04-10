@@ -359,36 +359,6 @@ void PressSmartKey()
   ui.ShowStatus();
 }
 
-void PressTopKey()
-{
-  unsigned long mils = (millis() EXTRA_MILLIS);
-  if (mils > 1000ul * 5ul * 60ul)
-  {
-    if (ui.IsBacklightOn()) {
-      ui.BacklightOff();
-    } else {
-      ui.PingScreenSave();
-    }
-    return;
-  }
-  sensors->AddHour();
-  ui.ResetHistory();
-  ui.Beep();
-}
-
-void PressBottomKey()
-{
-  unsigned long mils = (millis() EXTRA_MILLIS);
-  if (mils > 1000ul * 5ul * 60ul)
-  {
-    ui.BacklightOn();
-    return;
-  }
-  sensors->Add10Min();
-  ui.ResetHistory();
-  ui.Beep();
-}
-
 void loop()
 {
   static byte avrFlowSecondHash = 0;
@@ -403,11 +373,25 @@ void loop()
   Task2Do task = ui.ProcessKeys();
   switch (task)
   {
-    case MinusTask:
-      PressTopKey();
+    case Time15MinPlus:
+      if (mils > 1000 * 5 * 60)
+      {
+        if (IsOk(forceTemp)) forceTemp += 1.0;
+        break;
+      }
+      sensors->AddHour();
+      ui.ResetHistory();
+      ui.Beep();
       break;
-    case PlusTask:
-      PressBottomKey();
+    case Time15MinMinus:
+      if (mils > 1000 * 5 * 60)
+      {
+        if (IsOk(forceTemp))  forceTemp -= 1.0;        
+        break;
+      }
+      sensors->Add10Min();
+      ui.ResetHistory();
+      ui.Beep();
       break;
     case MainMenu:
       DoMainMenu();

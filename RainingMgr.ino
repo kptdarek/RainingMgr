@@ -15,7 +15,7 @@ Valves valves;
 double minNoErrorTemp = -30.0;
 double forceTemp = -100.0;
 bool firstIter = true;
-byte avrFlow = 0;
+byte avrFlowX10  = 0;
 byte sensorInterrupt = 0;  // 0 = digital pin 2
 byte sensorPin       = 2;
 int pulseCount = 0;
@@ -140,7 +140,7 @@ void DoTestMenu()
 void DoValvesCfg()
 {
   Configuration& cfg = Config::Get();
-  const __FlashStringHelper* valvest[] = {F("WYL WYL"), F("NO NO"), F("NO WYL"), F("WYL NO"), F("NZ WYL"), F("WYL NZ")};
+  const __FlashStringHelper* valvest[] = {F("WYL WYL"), F("NO-NO") , F("NZ||NZ"), F("NO WYL"), F("WYL NO"), F("NZ WYL"), F("WYL NZ")};
   int cfgIndex = ui.Menu(F("Podl. zawory"), valvest, sizeof(valvest) / sizeof(__FlashStringHelper*), cfg.ValvesConfig);
   if (cfgIndex != -1)
   {
@@ -199,7 +199,7 @@ void SetAlaramFlags(const __FlashStringHelper* title, byte bit)
 
 void DoAlarmsMenu()
 {
-  const __FlashStringHelper* items[] = {F("Al. Przeplyw"), F("Al. Cewka"), F("Al. Informa"), F("Al. termometr"), F("Al. dzwieki"), F("Al. Wszytkie")};
+  const __FlashStringHelper* items[] = {F("Przeplyw"), F("Cewka"), F("Informacje"), F("Termometr"), F("Dzwieki"), F("Wszystkie")};
   int index;
   do {
     index = ui.Menu(F("Alarmy"), items, sizeof(items) / sizeof(__FlashStringHelper*));
@@ -232,7 +232,7 @@ void DoAlarmsMenu()
 
 void DoSettingsMenu()
 {
-  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Opoz kwit okres") , F("Max min cewki"),  F("Zapisz"), F("Przywroc"), F("Zeruj liczn."), F("Reset")};
+  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Opoz kwit okres") , F("Max min cewki"), F("Auto wyl zaw"), F("Min przeplyw"), F("Kalibr. przep"),F("Zapisz"), F("Przywr fabr"), F("Zeruj liczn.")};
   int index;
   do {
     index = ui.Menu(F("Ustawienia"), items, sizeof(items) / sizeof(__FlashStringHelper*));
@@ -262,17 +262,23 @@ void DoSettingsMenu()
         cfg.ValMaxWorkMin = ui.SetValue(items[index], cfg.ValMaxWorkMin);//TODO zmienic na 5
         break;
       case 7:
-        Config::Save();//ok
+        cfg.AutoDisableValveIfError = ui.SetValue(items[index], cfg.AutoDisableValveIfError);
         break;
       case 8:
+        cfg.FlowAlarmThreshold = ui.SetValue(items[index], cfg.FlowAlarmThreshold);
+        break;
+        case 9:
+        cfg.flowFactor = ui.SetValue(items[index], cfg.flowFactor,0.01f);
+        break;        
+      case 10:
+        Config::Save();//ok
+        break;
+      case 11:
         Config::Init();
         break;
-      case 9:
+      case 12:
         Config::SetTotalWater(0);
         totalWaterAll = 0;
-        break;
-      case 10:
-        asm volatile ("  jmp 0");
     }
   } while (index != -1);
 }
@@ -288,36 +294,86 @@ void DoFixedMode()
   }
 }
 
+void ClearHistory()
+{
+  ui.ResetHistory();
+  ui.ResetAlarms();
+  Config::SetTotalWater(totalWaterAll + (long)totalWater);
+  totalWater = 0.0;
+  ui.Beep();
+  delay(250);
+  ui.Beep();
+  delay(250);
+  ui.Beep();
+}
+
+void ResetCycle()
+{
+   switch (currentMode)
+    {     
+      case   WmAntiFreez:
+        CheckAntiFreezMode(10.0, 10.0, false);
+        break;
+      case WmAntiFreezHalfAuto:
+        CheckAntiFreezMode(10.0, 10.0, true);
+        break;    
+    }
+}
+
+void DoStartMenu()
+{
+  const __FlashStringHelper* items[] = {F("Zerowanie"), F("Sym temp. 50%"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz") : F("Opoz kwitnien"), F("Polautomat"), F("Reset cyklu"), F("Temp cfg info")};
+  int index = ui.Menu(F("Meni start"), items, sizeof(items) / sizeof(__FlashStringHelper*));
+  switch (index)
+  {
+    case 0:
+      ClearHistory();
+      break;
+    case 1:
+      forceTemp = dynaSensors1.GetTempFromMode(SS50);
+      break;
+    case 2:
+      SetMode(currentMode == WmDeleayFolowering ? WmNone : WmDeleayFolowering);
+      break;
+    case 3:
+      DoHalfAutoMode(items[index]);
+      break;
+      case 4:
+        ResetCycle();
+      break;
+    case 5:
+      ui.ShowTempCfgStatus();
+      break;
+  }
+}
+
 void DoMainMenu()
 {
-  const __FlashStringHelper* items[] = {F("Alarmy"), F("Status"), F("Hisoria"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz") : F("Opoz kwitnien"), F("Pol automat"), F("Ustawienia"),  F("Symulacje"),  F("#FIX Bajp/Zamk")};
+  const __FlashStringHelper* items[] = {F("Start"), F("Alarmy"), F("Status"), F("Historia"), F("Ustawienia"),  F("Symulacje"),  F("#FIX Bajp/Zamk")};
   int index = ui.Menu(F("Meni glowne"), items, sizeof(items) / sizeof(__FlashStringHelper*) -  (valves.CanSetFixedMode() ? 0 : 1));
 
   switch (index)
   {
     case 0:
-      if (ui.IsAnyAlarm()) ui.CheckAlarms();
+      DoStartMenu();
       break;
     case 1:
+      if (ui.IsAnyAlarm()) ui.CheckAlarms();
+      break;
+    case 2:
       Config::SetTotalWater(totalWaterAll + (long)totalWater);
       ui.ShowStatus();
       break;
-    case 2:
+    case 3:
       ui.History();
       break;
-    case 3:
-      SetMode(currentMode == WmDeleayFolowering ? WmNone : WmDeleayFolowering);
-      break;
     case 4:
-      DoHalfAutoMode(items[index]);
-      break;
-    case 5:
       DoSettingsMenu();
       break;
-    case 6:
+    case 5:
       DoTestMenu();
       break;
-    case 7:
+    case 6:
       DoFixedMode();
       break;
   }
@@ -345,7 +401,7 @@ void PressSmartKey()
 
   if (ui.IsActiveAlarm())
   {
-    ui.CheckAlarms();
+    ui.CheckAlarms(true);
     return;
   }
 
@@ -368,8 +424,8 @@ void loop()
   static byte t2RetryCnt = 0;
   Configuration& cfg = Config::Get();
   sensors->RequestTemps();
-  unsigned long mils = (millis() EXTRA_MILLIS);
 
+  bool skipCheckFlow = false;
   Task2Do task = ui.ProcessKeys();
   switch (task)
   {
@@ -394,13 +450,13 @@ void loop()
       ui.Beep();
       break;
     case MainMenu:
-      DoMainMenu();
+      DoMainMenu(); skipCheckFlow = true;
       break;
     case Back:
-      PressSmartKey();
+      PressSmartKey(); skipCheckFlow = true;
   };
 
-
+  unsigned long mils = (millis() EXTRA_MILLIS);
   if (mils - lastPulsMillis > FLOW_SAMPLE_MILLIS )
   {
     sensors->SetFlowPulses(pulseCount, mils - lastPulsMillis);
@@ -434,7 +490,7 @@ void loop()
   ui.SetTemperature(t2, BottomT);
 
   int flow = sensors->GetFlow();
-  ui.SetFlow(flow, CurrentV);
+  ui.SetCurrentFlow(flow);
   byte secHash = (byte)(long)(mils / 1000l) % 60L;
 
   if (secHash != avrFlowSecondHash) { //only onece a seconds
@@ -444,7 +500,7 @@ void loop()
     avrFlowSum += flow; avrFlowSamples++;
     if (avrFlowSamples >=  ((currentMode == WmDeleayFolowering) ? cfg.DelayFlowerMinutsPeriod * 60 : cfg.AntiFreezePeriod))
     {
-      avrFlow = avrFlowSum / avrFlowSamples;
+      avrFlowX10  = avrFlowSum * 10 / avrFlowSamples;
 
       unsigned long secs = (mils - lastChekAvrFlowMillis) / 1000L;
       totalWater += (double)((double)avrFlowSum / (double)avrFlowSamples) * ((double)secs / 60.0f);
@@ -460,8 +516,12 @@ void loop()
       avrFlowSum = avrFlowSamples = 0;
     }
 
-    valves.SetFlow(flow);
-    ui.SetFlow(avrFlow , AverageF);
+    if (!skipCheckFlow)
+    {
+      valves.SetFlow(flow);
+    }
+
+    ui.SetAvargeFlowX10(avrFlowX10);
 
     VAlarm alrm = valves.PeekAlarm();
     if (alrm.title != NULL)

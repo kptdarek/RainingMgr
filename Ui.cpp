@@ -4,6 +4,8 @@
 #include "Valves.h"
 #include "Config.h"
 
+#define SCREEN_SAVE_DELAY_MINUTS 5
+
 #define MENU_LIVE_LEN 20  //*500ms
 #define LITER_C char(0)
 #define MENU_TOP_C char(1)
@@ -115,20 +117,28 @@ UIMgr::UIMgr(): lcd(0x27, 16, 2)
 {
   lastTime = 0;
   lastFlowA = 0;
-  hisotryIndex = 0;
-  alarmIndex = 0;
+
   alarmShowMode = false;
   antifrezModeLedOn = false;
+  lastTimeBackLightOn = 0;
 
+  ResetAlarms();
+  ResetHistory();
+  ResetTempHisotry();
+}
+
+void  UIMgr::ResetAlarms()
+{
+  alarmIndex = 0;
   for (int i = 0 ; i < ALARM_SIZE; i++)
   {
     Alarms[i].msg = NULL;
   }
-  ResetHistory();
-  ResetTempHisotry();
 }
+
 void  UIMgr::ResetHistory()
 {
+  hisotryIndex = 0;
   for (int i = 0 ; i < HISTORY_SIZE; i++)
   {
     history[i].time = 0;
@@ -157,7 +167,7 @@ void UIMgr::Setup(Valves* v)
     lcd.createChar(i, CCRam);
   }
 
-  lcd.backlight();
+  lcd.backlight(); backlightOn = true;
 
   pinMode(key1_pin, INPUT_PULLUP);
   pinMode(key2_pin, INPUT_PULLUP);
@@ -214,7 +224,11 @@ void UIMgr::SetTime(unsigned long timeFrom24,  bool saveHisotry )
     PrintTime(minuts);
   }
 
-  if (saveHisotry) lastTime = timeFrom24;
+  if (saveHisotry)
+  {
+    lastTime = timeFrom24;
+    checkScreenSave();
+  }
 }
 
 void UIMgr::PrintTime(int minuts )
@@ -250,30 +264,44 @@ void UIMgr::SaveHistoryItem(unsigned long timeFrom24)
   hisotryIndex =  hisotryPlus(hisotryIndex );
 }
 
-void UIMgr::SetFlow(byte value, FlowType type)
+void UIMgr::SetAvargeFlowX10(byte value)
 {
-
-  if ( value != (type == AverageF ? lastFlowA : lastFlowC))
+  if ( value != lastFlowA)
   {
-    int line = 0;
-    if ( type == AverageF)
-    {
-      lastFlowA = value;
-    } else
-    {
-      lastFlowC = value;
-      line = 1;
-    }
+    lastFlowA = value;
     if (!alarmShowMode)
     {
-      lcd.setCursor(6, line);
+      lcd.setCursor(6, 0);
       lcd.print(F("   "));
-      lcd.setCursor(6, line);
+      lcd.setCursor(6, 0);
+      if (value >= 10 || value == 0)
+      {
+        lcd.print(value / 10);
+      } else {
+        lcd.print(F("."));
+        lcd.print(value);
+      }
+      lcd.print(LITER_P_MIN_C);
+    }
+  }
+}
+
+void UIMgr::SetCurrentFlow(byte value)
+{
+  if ( value != lastFlowC)
+  {
+    lastFlowC = value;
+    if (!alarmShowMode)
+    {
+      lcd.setCursor(6, 1);
+      lcd.print(F("   "));
+      lcd.setCursor(6, 1);
       lcd.print(value);
       lcd.print(LITER_P_MIN_C);
     }
   }
 }
+
 
 void UIMgr::SetPowerPrecent(byte value, bool halfAuto)
 {
@@ -310,8 +338,8 @@ void UIMgr::SetPowerPrecent(byte value, bool halfAuto)
 Task2Do UIMgr::ProcessKeys()
 {
   KeybordKeys keys = GetPressed();
-  if (keys & TopKey) return Time15MinPlus;
-  if (keys & BottomKey) return Time15MinMinus;
+  if (keys & TopKey) return MinusTask;
+  if (keys & BottomKey) return PlusTask;
   if (keys & EnterKey) return MainMenu;
   if (keys & BackKey) return Back;
 
@@ -325,6 +353,8 @@ KeybordKeys  UIMgr::GetPressed()
   if (!digitalRead(key2_pin))  result = TopKey;
   if (!digitalRead(key3_pin)) result = BottomKey;
   if (!digitalRead(key4_pin)) result = EnterKey;
+
+  if (result != NoneKey && result != TopKey) PingScreenSave();
   return result;
 }
 
@@ -620,9 +650,16 @@ void UIMgr::History()
   Invalidate();
 }
 
-void UIMgr::CheckAlarms()
+void UIMgr::CheckAlarms(bool showLastActive)
 {
   byte index = alarmIndex;
+
+  if (showLastActive)
+  {
+    index = GetlastActiveAlarm();
+    if (index == 255) index = alarmIndex;    
+  }
+  
   bool invalidate = true;
   WaitKeyUp();
 
@@ -685,7 +722,7 @@ void  UIMgr::History(byte index)
   SetTime(history[index].time, false);
   SetTemperature(t1, TopT, false);
   SetTemperature(t2, BottomT, false);
-  SetFlow(history[index].flowA, AverageF);
+  SetAvargeFlowX10(history[index].flowA);
   SetPowerPrecent(history[index].PowerPrec);
 
   byte prev = historyMinus(index);
@@ -793,7 +830,7 @@ byte UIMgr::GetlastActiveAlarm()
     if (Alarms[index].flags & ALARM_UNREAD) return index;
     index = alarmMinus(index);
   }
-  return false;
+  return 255;
 }
 
 void UIMgr::ShowLastAlarm(bool show)
@@ -801,6 +838,7 @@ void UIMgr::ShowLastAlarm(bool show)
   bool on = (IsActiveAlarm() && show);
   if (on != alarmShowMode)
   {
+    BacklightOn();
     alarmShowMode = on;
     lcd.clear();
     if (on)
@@ -859,7 +897,6 @@ void UIMgr::AddAlarm(const __FlashStringHelper* title, byte flags)
       Alarms[exist].cnt ++;
     }
     Alarms[exist].flags = flags | ALARM_UNREAD;
-    Alarms[exist].time = lastTime;
     return;
 
   }
@@ -888,10 +925,10 @@ bool UIMgr::Beep()
 }
 
 
-// XX_XX = 0, NO_NO = 1, NO_XX = 2, XX_NO = 3 , NZ_XX = 4, XX_NZ = 5
+// XX_XX = 0, NO_NO = 1,NZ_NZ = 2, NO_XX = 3, XX_NO = 4 , NZ_XX = 5, XX_NZ = 6
 void UIMgr::ShowStatus()
 {
-  const __FlashStringHelper* valves[] = {F("----"), F("NoNo"), F("No--"), F("--No"), F("Nz--"), F("--Nz")};
+  const __FlashStringHelper* valves[] = {F("----"), F("NoNo"), F("NzNz"), F("No--"), F("--No"), F("Nz--"), F("--Nz")};
   Configuration& cfg = Config::Get();
   lcd.clear();
   lcd.setCursor(0, 0);
@@ -902,8 +939,10 @@ void UIMgr::ShowStatus()
   lcd.print(F(" R"));
 #endif
 
-  lcd.print(F("<"));
-  lcd.print(cfg.ValMaxWorkMin);
+  lcd.print(F(">"));
+  lcd.print(cfg.FlowAlarmThreshold);
+  lcd.print(LITER_P_MIN_C);
+  if (cfg.AutoDisableValveIfError) lcd.print(F("*"));
   lcd.print(F(" "));
   lcd.print(cfg.Alarms & ALARM_SOUNDS ? SND_C : NOSND_C);
   lcd.print(cfg.Alarms & ALARM_INFO ? F("I") : F("-"));
@@ -914,10 +953,8 @@ void UIMgr::ShowStatus()
 
   lcd.setCursor(0, 1);
   lcd.print((millis() EXTRA_MILLIS) / 1000 / 60 / 60);
-  lcd.print(F(":"));
-  lcd.print((millis() EXTRA_MILLIS) / 1000 / 60 % 60);
-
-
+  lcd.print(F("h"));
+  
   lcd.print(F(" "));
   lcd.print(Config::GetTotalWater());
   lcd.print(F("/"));
@@ -928,4 +965,74 @@ void UIMgr::ShowStatus()
   delay(3000);
   WaitKeyUp();
   Invalidate();
+}
+
+void UIMgr::ShowTempCfgStatus()
+{
+  Configuration& cfg = Config::Get();
+  lcd.clear();
+  lcd.setCursor(0, 0); 
+  lcd.print(F("C<"));
+  lcd.print(cfg.ValMaxWorkMin); //4
+  lcd.print(F(" <"));//2
+  lcd.print(abs(cfg.AntiFrezTemp),1);
+  lcd.print(F(","));
+  lcd.print(abs(cfg.DelayStop),1);
+  lcd.print(F(">"));
+  lcd.print(DEGR_CELC_C);
+
+  lcd.setCursor(0, 1);    
+  lcd.print(abs(cfg.Go25Temp),1);
+  lcd.print(F("<"));//4
+  lcd.print(abs(cfg.Go50Temp),1);
+  lcd.print(F("<"));//4
+  lcd.print(abs(cfg.Go75Temp),1);
+  lcd.print(F("<"));//4
+  lcd.print(abs(cfg.Go100Temp),1);
+  lcd.print(DEGR_CELC_C);//4
+    
+  delay(3000);
+  WaitKeyUp();
+  Invalidate();
+}
+
+void UIMgr::BacklightOff()
+{
+  lcd.noBacklight(); backlightOn = false;
+  lastTimeBackLightOn = 1; //wlaczamy wygaszacz
+}
+bool UIMgr::IsBacklightOn()
+{
+  return backlightOn;
+}
+
+void UIMgr::BacklightOn()//wylaczamy wygaszac
+{
+  lastTimeBackLightOn = 0;
+  if (backlightOn) return;
+  lcd.backlight(); backlightOn = true;
+}
+
+void UIMgr::checkScreenSave()
+{
+  if (lastTimeBackLightOn == 0 || !backlightOn) return;
+  if (lastTime - lastTimeBackLightOn >= SCREEN_SAVE_DELAY_MINUTS)
+  {
+    lcd.noBacklight(); backlightOn = false;
+  }
+}
+
+void UIMgr::PingScreenSave()
+{
+  if (lastTimeBackLightOn == 0)
+  {
+    BacklightOn();
+  } else {
+    if (!backlightOn)
+    {
+      lcd.backlight();
+      backlightOn = true;
+    }
+    lastTimeBackLightOn = lastTime;
+  }
 }

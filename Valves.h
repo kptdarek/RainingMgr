@@ -52,6 +52,7 @@ class Valves
     void CheckMaxHigh();
     void Alarm(const __FlashStringHelper* msg, byte type);
     void Init();
+    bool CheckDisableValve(bool flowExist);
   public:
     VAlarm PeekAlarm();
     Valves();

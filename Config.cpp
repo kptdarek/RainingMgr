@@ -21,9 +21,11 @@ void Config::Init()
   cfg.DelayFlower100Temp = 16.0f;
   cfg.ValMaxWorkMin = 30;
   cfg.Sensors = 0;
-  cfg.DelayStop = 2.0;
+  cfg.DelayStop = 3.0;
   cfg.HalfAutomaticMode = false;
   cfg.T1OnSunDelta = 3;
+  cfg.FlowAlarmThreshold = 1;
+  cfg.AutoDisableValveIfError = false;
 }
 
 Configuration& Config::Get()
@@ -34,11 +36,17 @@ Configuration& Config::Get()
 void Config::Load()
 {
   EEPROM.get(0, cfg);
-  cfg.flowFactor = 7.29;
+  if (isnan(cfg.flowFactor) || cfg.flowFactor < 1) cfg.flowFactor = 7.29;
   //Init();//do czasu zapisania na EEPROM
   if (cfg.AntiFreezePeriod == -1) Init();
   if (cfg.ValMaxWorkMin < 3) cfg.ValMaxWorkMin = 3;
   if (isnan(cfg.T1OnSunDelta) || !(cfg.T1OnSunDelta > 2 && cfg.T1OnSunDelta < 15))  cfg.T1OnSunDelta = 3;
+  if (cfg.FlowAlarmThreshold < 1) cfg.FlowAlarmThreshold = 1;
+   if (cfg.FlowAlarmThreshold > 50)
+   {
+    cfg.FlowAlarmThreshold = 1;
+    cfg.AutoDisableValveIfError = false;
+   }
 }
 
 void Config::Save()

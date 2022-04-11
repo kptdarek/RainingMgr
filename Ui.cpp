@@ -638,6 +638,9 @@ void UIMgr::History()
       case BottomKey:
         i = hisotryPlus(index);
         break;
+     case EnterKey:
+        i = findMinHistory(index);
+        break;
     }
     if (i != index && history[i].PowerPrec != POWER_GUARD)
     {
@@ -645,9 +648,24 @@ void UIMgr::History()
       History(index);
     }
 
-  } while (key != BackKey  && key != EnterKey);
+  } while (key != BackKey);
 
   Invalidate();
+}
+
+byte UIMgr::findMinHistory(byte ind)
+{
+  byte minIncex = ind;
+  byte  index = ind;
+  for (int i = 0 ; i < HISTORY_SIZE; i++)
+  {
+    if (history[index].PowerPrec == POWER_GUARD) break;
+    index = historyMinus(index);
+    if (history[index].PowerPrec == POWER_GUARD) break;
+
+    if (history[index].t2 < history[minIncex].t2 ) minIncex = index;
+  }
+  return minIncex;
 }
 
 void UIMgr::CheckAlarms(bool showLastActive)

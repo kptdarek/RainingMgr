@@ -135,6 +135,7 @@ class UIMgr
 
 
   private:
+    byte findMinHistory(byte ind);
     byte hisotryPlus(byte index);
     byte historyMinus(byte index);
     void ResetTempHisotry();

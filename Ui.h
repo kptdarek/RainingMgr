@@ -130,12 +130,12 @@ class UIMgr
     KeybordKeys GetPressed();
 
     void SaveHistoryItem(unsigned long timeFrom24);
-    void History(byte index);
+    void History(byte index, byte minInx1,byte minInx2);
     void Alarm(byte index);
 
 
   private:
-    byte findMinHistory(byte ind);
+    byte findMinHistory(byte ind, bool top);
     byte hisotryPlus(byte index);
     byte historyMinus(byte index);
     void ResetTempHisotry();

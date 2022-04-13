@@ -619,8 +619,10 @@ void UIMgr::History()
 {
   byte index = historyMinus(hisotryIndex);
   if (history[index].PowerPrec == POWER_GUARD) return;
+  byte minInx1 =  findMinHistory(index, true);
+  byte minInx2 =  findMinHistory(index, false);
 
-  History(index);
+  History(index, minInx1, minInx2);
   WaitKeyUp();
 
   KeybordKeys key = NoneKey;
@@ -638,16 +640,34 @@ void UIMgr::History()
       case BottomKey:
         i = hisotryPlus(index);
         break;
+      case EnterKey:
+        i = (i == minInx2 ? minInx1 : minInx2);
+        break;
     }
     if (i != index && history[i].PowerPrec != POWER_GUARD)
     {
       index = i;
-      History(index);
+      History(index, minInx1, minInx2);
     }
 
-  } while (key != BackKey  && key != EnterKey);
+  } while (key != BackKey);
 
   Invalidate();
+}
+
+byte UIMgr::findMinHistory(byte ind, bool top)
+{
+  byte minIncex = ind;
+  byte  index = ind;
+  for (int i = 0 ; i < HISTORY_SIZE; i++)
+  {
+    if (history[index].PowerPrec == POWER_GUARD) break;
+    index = historyMinus(index);
+    if (history[index].PowerPrec == POWER_GUARD) break;
+
+    if ((top ? history[index].t1 : history[index].t2) < (top ? history[minIncex].t1 : history[minIncex].t2 )) minIncex = index;
+  }
+  return minIncex;
 }
 
 void UIMgr::CheckAlarms(bool showLastActive)
@@ -657,9 +677,9 @@ void UIMgr::CheckAlarms(bool showLastActive)
   if (showLastActive)
   {
     index = GetlastActiveAlarm();
-    if (index == 255) index = alarmIndex;    
+    if (index == 255) index = alarmIndex;
   }
-  
+
   bool invalidate = true;
   WaitKeyUp();
 
@@ -714,7 +734,7 @@ void UIMgr::Alarm(byte index)
   lcd.print(F("[")); lcd.print(Alarms[index].cnt); lcd.print(F("]"));
 }
 
-void  UIMgr::History(byte index)
+void  UIMgr::History(byte index, byte minInx1, byte minInx2)
 {
   Invalidate();
   double t1 = history[index].t1;
@@ -740,19 +760,31 @@ void  UIMgr::History(byte index)
 
     double pt1 = history[prev].t1;
     double pt2 = history[prev].t1;
-    if (pt1 != t1)
+
+    if (index == minInx1)
     {
       lcd.setCursor(10, 0);
-      lcd.print(pt1 < t1 ? MENU_TOP_C : MENU_BOT_C);
+      lcd.print(F("!"));
+    } else {
+      if (pt1 != t1)
+      {
+        lcd.setCursor(10, 0);
+        lcd.print(pt1 < t1 ? MENU_TOP_C : MENU_BOT_C);
+      }
     }
-    if (pt2 != t2)
+
+    if (index == minInx2)
     {
       lcd.setCursor(10, 1);
-      lcd.print(pt2 < t2 ? MENU_TOP_C : MENU_BOT_C);
+      lcd.print(F("!"));
+    } else {
+      if (pt2 != t2)
+      {
+        lcd.setCursor(10, 1);
+        lcd.print(pt2 < t2 ? MENU_TOP_C : MENU_BOT_C);
+      }
     }
   }
-
-
 }
 
 void  UIMgr::Invalidate()
@@ -954,7 +986,7 @@ void UIMgr::ShowStatus()
   lcd.setCursor(0, 1);
   lcd.print((millis() EXTRA_MILLIS) / 1000 / 60 / 60);
   lcd.print(F("h"));
-  
+
   lcd.print(F(" "));
   lcd.print(Config::GetTotalWater());
   lcd.print(F("/"));
@@ -971,26 +1003,26 @@ void UIMgr::ShowTempCfgStatus()
 {
   Configuration& cfg = Config::Get();
   lcd.clear();
-  lcd.setCursor(0, 0); 
+  lcd.setCursor(0, 0);
   lcd.print(F("C<"));
   lcd.print(cfg.ValMaxWorkMin); //4
   lcd.print(F(" <"));//2
-  lcd.print(abs(cfg.AntiFrezTemp),1);
+  lcd.print(abs(cfg.AntiFrezTemp), 1);
   lcd.print(F(","));
-  lcd.print(abs(cfg.DelayStop),1);
+  lcd.print(abs(cfg.DelayStop), 1);
   lcd.print(F(">"));
   lcd.print(DEGR_CELC_C);
 
-  lcd.setCursor(0, 1);    
-  lcd.print(abs(cfg.Go25Temp),1);
+  lcd.setCursor(0, 1);
+  lcd.print(abs(cfg.Go25Temp), 1);
   lcd.print(F("<"));//4
-  lcd.print(abs(cfg.Go50Temp),1);
+  lcd.print(abs(cfg.Go50Temp), 1);
   lcd.print(F("<"));//4
-  lcd.print(abs(cfg.Go75Temp),1);
+  lcd.print(abs(cfg.Go75Temp), 1);
   lcd.print(F("<"));//4
-  lcd.print(abs(cfg.Go100Temp),1);
+  lcd.print(abs(cfg.Go100Temp), 1);
   lcd.print(DEGR_CELC_C);//4
-    
+
   delay(3000);
   WaitKeyUp();
   Invalidate();

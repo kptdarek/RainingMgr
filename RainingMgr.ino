@@ -298,7 +298,9 @@ void ClearHistory()
 {
   ui.ResetHistory();
   ui.ResetAlarms();
-  Config::SetTotalWater(totalWaterAll + (long)totalWater);
+
+  totalWaterAll = totalWaterAll + (long)totalWater;
+  Config::SetTotalWater(totalWaterAll);
   totalWater = 0.0;
   ui.Beep();
   delay(250);

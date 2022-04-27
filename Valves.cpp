@@ -5,7 +5,7 @@
 
 int first_chanel = 17;
 int second_chanel = 16;
-
+#define FLOW_CHECK_DELAY_SEC 4
 
 VAlarm::VAlarm()
 {
@@ -155,7 +155,7 @@ void  Valves::SetFlow(byte flow)
     fixedMode = false;
   }
 
-  if (lastChangeSeconds != -1 && seconds - lastChangeSeconds > 2)
+  if (lastChangeSeconds != -1 && seconds - lastChangeSeconds > FLOW_CHECK_DELAY_SEC)
   {
     Configuration& cfg = Config::Get();
 

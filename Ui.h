@@ -126,6 +126,7 @@ class UIMgr
     void BacklightOn();
       bool IsBacklightOn();
     void PingScreenSave();
+    void SuccessSnd(unsigned long timeFrom24, int times = 1);
   protected:
     KeybordKeys GetPressed();
 

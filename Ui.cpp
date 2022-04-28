@@ -18,6 +18,13 @@
 
 #define POWER_GUARD 255
 
+#define NOTE_SUSTAIN 250
+#define NOTE_C5  523
+#define NOTE_D5  587
+#define NOTE_E5  659
+#define NOTE_A5  880
+#define NOTE_B5  988
+
 extern double totalWater;
 extern byte saveEepromCounter;
 
@@ -1067,4 +1074,40 @@ void UIMgr::PingScreenSave()
     }
     lastTimeBackLightOn = lastTime;
   }
+}
+
+void UIMgr::SuccessSnd(unsigned long timeFrom24, int times)
+{
+int h = (timeFrom24 / 60) % 24;
+if ( h < 6 || h > 21) return;
+for(int i=0; i < times; i++)
+{
+  if (i) delay(1000);
+tone(piezo_pin,NOTE_A5 );
+delay(NOTE_SUSTAIN);
+tone(piezo_pin,NOTE_B5);
+delay(NOTE_SUSTAIN);
+tone(piezo_pin,NOTE_C5);
+delay(NOTE_SUSTAIN);
+tone(piezo_pin,NOTE_B5);
+delay(NOTE_SUSTAIN);
+tone(piezo_pin,NOTE_C5);
+delay(NOTE_SUSTAIN);
+tone(piezo_pin,NOTE_D5);
+delay(NOTE_SUSTAIN);
+tone(piezo_pin,NOTE_C5);
+delay(NOTE_SUSTAIN);
+tone(piezo_pin,NOTE_D5);
+delay(NOTE_SUSTAIN);
+tone(piezo_pin,NOTE_E5);
+delay(NOTE_SUSTAIN);
+tone(piezo_pin,NOTE_D5);
+delay(NOTE_SUSTAIN);
+tone(piezo_pin,NOTE_E5);
+delay(NOTE_SUSTAIN);
+tone(piezo_pin,NOTE_E5);
+delay(NOTE_SUSTAIN);
+noTone(piezo_pin);
+
+}
 }

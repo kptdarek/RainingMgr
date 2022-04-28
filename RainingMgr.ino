@@ -302,11 +302,7 @@ void ClearHistory()
   totalWaterAll = totalWaterAll + (long)totalWater;
   Config::SetTotalWater(totalWaterAll);
   totalWater = 0.0;
-  ui.Beep();
-  delay(250);
-  ui.Beep();
-  delay(250);
-  ui.Beep();
+  ui.SuccessSnd(sensors->GetTime());
 }
 
 void ResetCycle()
@@ -696,6 +692,11 @@ void CheckAntiFreezMode(double t1, double t2, bool halfAuto)
     if ((lastMode == Val25 || lastMode == ValAntiFreeze) && valves.CanSetFixedMode())
     {
       proposeFixedMode = true;
+    }
+
+    if (lastMode != m && m == ValZero)
+    {
+      ui.SuccessSnd(sensors->GetTime(),3);
     }
 
     CheckProposeFixeMode(false);

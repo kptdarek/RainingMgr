@@ -406,6 +406,7 @@ void PressSmartKey()
   if (IsOk(forceTemp))
   {
     forceTemp = -100;
+    ResetCycle();
     return;
   }
 

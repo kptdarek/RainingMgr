@@ -44,6 +44,7 @@ struct Configuration
   float T1OnSunDelta;  
   bool AutoDisableValveIfError;
   unsigned char FlowAlarmThreshold;
+  unsigned char CheckIfSureToOnMinHour; //0 none
 };
 
 class Config

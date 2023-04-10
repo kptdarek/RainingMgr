@@ -80,17 +80,17 @@ void SetMode(WorkMode mode)
   }
 }
 
-void DoStatTempMenu()
-{
+/*void DoStatTempMenu()
+  {
   const __FlashStringHelper* valvest[] = {F("Anty zmarz"), F("25%"), F("50%"), F("75%"), F("100%"), F("9oC")};
   int cfgIndex = ui.Menu(F("Stala temp"), valvest, sizeof(valvest) / sizeof(__FlashStringHelper*));
   if (cfgIndex != -1)
   {
     forceTemp = dynaSensors1.GetTempFromMode((StaticSymMode)(cfgIndex + 1));
   }
-}
+  }*/
 
-void DoDynamicSymMenu(bool realFlow)
+void DoDynamicSymMenu(bool realFlow, byte startHour = 19)
 {
   Configuration& cfg = Config::Get();
   const __FlashStringHelper** valvest = dynaSensors1.Titles();
@@ -99,7 +99,7 @@ void DoDynamicSymMenu(bool realFlow)
   {
     cfg.Sensors = cfgIndex + 1;
     sensors = &dynaSensors1;
-    dynaSensors1.SetMode(cfgIndex, realFlow);
+    dynaSensors1.SetMode(cfgIndex, realFlow, startHour);
     sensors->Setup();
   }
 }
@@ -107,7 +107,7 @@ void DoDynamicSymMenu(bool realFlow)
 void DoTestMenu()
 {
   Configuration& cfg = Config::Get();
-  const __FlashStringHelper* items[] = { F("Stala temp"), F("Symul dyna"), F("Przep real"), F("Wyl symul")
+  const __FlashStringHelper* items[] = { F("Stala temp"), F("Symul 19:00"), F("Symul 3:00"), F("Przep real"), F("Wyl symul")
 #if DEBUG
                                          , F("LEDy")
 #endif
@@ -116,21 +116,24 @@ void DoTestMenu()
   switch (index)
   {
     case 0:
-      DoStatTempMenu();
+      forceTemp = dynaSensors1.GetTempFromMode(SSNone);
       break;
     case 1:
       DoDynamicSymMenu(false);
       break;
     case 2:
-      DoDynamicSymMenu(true);
+      DoDynamicSymMenu(false, 3);
       break;
     case 3:
+      DoDynamicSymMenu(true);
+      break;
+    case 4:
       sensors = &realSensors;
       cfg.Sensors = 0;
       sensors->Setup();
       break;
 #if DEBUG
-    case 4:
+    case 5:
       ui.TestLeds();
       break;
 #endif
@@ -232,7 +235,7 @@ void DoAlarmsMenu()
 
 void DoSettingsMenu()
 {
-  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Ant zam okres"), F("Ant zam otwar"), F("Opoz kwit okres") , F("Max min cewki"), F("Auto wyl zaw"), F("Min przeplyw"), F("Kalibr. przep"),F("Zapisz"), F("Przywr fabr"), F("Zeruj liczn.")};
+  const __FlashStringHelper* items[] = {F("Alarmy"), F("Zawory"), F("Temperaury"), F("Opc deszcz od"), F("Ant zam okres"), F("Ant zam otwar"), F("Opoz kwit okres") , F("Max min cewki"), F("Auto wyl zaw"), F("Min przeplyw"), F("Kalibr. przep"), F("Zapisz"), F("Przywr fabr"), F("Zeruj liczn.")};
   int index;
   do {
     index = ui.Menu(F("Ustawienia"), items, sizeof(items) / sizeof(__FlashStringHelper*));
@@ -250,33 +253,37 @@ void DoSettingsMenu()
         DoTempMenu();
         break;
       case 3:
-        cfg.AntiFreezePeriod = ui.SetValue(items[index], cfg.AntiFreezePeriod, 5);
+        cfg.CheckIfSureToOnMinHour = ui.SetValue(items[index], cfg.CheckIfSureToOnMinHour);
+        if (cfg.CheckIfSureToOnMinHour < 0 || cfg.CheckIfSureToOnMinHour > 8) cfg.CheckIfSureToOnMinHour = 0;
         break;
       case 4:
-        cfg.AntiFreezeOpened = ui.SetValue(items[index], cfg.AntiFreezeOpened);
+        cfg.AntiFreezePeriod = ui.SetValue(items[index], cfg.AntiFreezePeriod, 5);
         break;
       case 5:
-        cfg.DelayFlowerMinutsPeriod = ui.SetValue(items[index], cfg.DelayFlowerMinutsPeriod);
+        cfg.AntiFreezeOpened = ui.SetValue(items[index], cfg.AntiFreezeOpened);
         break;
       case 6:
-        cfg.ValMaxWorkMin = ui.SetValue(items[index], cfg.ValMaxWorkMin);//TODO zmienic na 5
+        cfg.DelayFlowerMinutsPeriod = ui.SetValue(items[index], cfg.DelayFlowerMinutsPeriod);
         break;
       case 7:
-        cfg.AutoDisableValveIfError = ui.SetValue(items[index], cfg.AutoDisableValveIfError);
+        cfg.ValMaxWorkMin = ui.SetValue(items[index], cfg.ValMaxWorkMin);//TODO zmienic na 5
         break;
       case 8:
+        cfg.AutoDisableValveIfError = ui.SetValue(items[index], cfg.AutoDisableValveIfError);
+        break;
+      case 9:
         cfg.FlowAlarmThreshold = ui.SetValue(items[index], cfg.FlowAlarmThreshold);
         break;
-        case 9:
-        cfg.flowFactor = ui.SetValue(items[index], cfg.flowFactor,0.01f);
-        break;        
       case 10:
-        Config::Save();//ok
+        cfg.flowFactor = ui.SetValue(items[index], cfg.flowFactor, 0.01f);
         break;
       case 11:
-        Config::Init();
+        Config::Save();//ok
         break;
       case 12:
+        Config::Init();
+        break;
+      case 13:
         Config::SetTotalWater(0);
         totalWaterAll = 0;
     }
@@ -307,20 +314,20 @@ void ClearHistory()
 
 void ResetCycle()
 {
-   switch (currentMode)
-    {     
-      case   WmAntiFreez:
-        CheckAntiFreezMode(10.0, 10.0, false);
-        break;
-      case WmAntiFreezHalfAuto:
-        CheckAntiFreezMode(10.0, 10.0, true);
-        break;    
-    }
+  switch (currentMode)
+  {
+    case   WmAntiFreez:
+      CheckAntiFreezMode(10.0, 10.0, false);
+      break;
+    case WmAntiFreezHalfAuto:
+      CheckAntiFreezMode(10.0, 10.0, true);
+      break;
+  }
 }
 
 void DoStartMenu()
 {
-  const __FlashStringHelper* items[] = {F("Zerowanie"), F("Sym temp. 50%"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz") : F("Opoz kwitnien"), F("Polautomat"), F("Reset cyklu"), F("Temp cfg info")};
+  const __FlashStringHelper* items[] = {F("Zerowanie"), F("Sym temp. 50%"), currentMode == WmDeleayFolowering ? F("Wylacz zrasz") : F("Opoz kwitnien"), F("Polautomat"), F("Reset cyklu"), F("Temp cfg info"), currentMode == HoldRain ? F("Odbolokuj ochr.") : F("Bolokuj ochr.")};
   int index = ui.Menu(F("Meni start"), items, sizeof(items) / sizeof(__FlashStringHelper*));
   switch (index)
   {
@@ -336,18 +343,28 @@ void DoStartMenu()
     case 3:
       DoHalfAutoMode(items[index]);
       break;
-      case 4:
-        ResetCycle();
+    case 4:
+      ResetCycle();
       break;
     case 5:
       ui.ShowTempCfgStatus();
+      break;
+    case 6:
+      if (currentMode == HoldRain) {
+        SetMode(WmNone);
+      } else {
+        if (ui.YesNo(F("Anuluj ochrone?"), true))
+        {
+          SetMode(HoldRain);
+        }
+      }
       break;
   }
 }
 
 void DoMainMenu()
 {
-  const __FlashStringHelper* items[] = {F("Start"), F("Alarmy"), F("Status"), F("Historia"), F("Ustawienia"),  F("Symulacje"),  F("#FIX Bajp/Zamk")};
+  const __FlashStringHelper* items[] = {F("Start"), F("Historia"), F("Alarmy"), F("Status"), F("Ustawienia"),  F("Symulacje"),  F("#FIX Bajp/Zamk")};
   int index = ui.Menu(F("Meni glowne"), items, sizeof(items) / sizeof(__FlashStringHelper*) -  (valves.CanSetFixedMode() ? 0 : 1));
 
   switch (index)
@@ -356,14 +373,14 @@ void DoMainMenu()
       DoStartMenu();
       break;
     case 1:
-      if (ui.IsAnyAlarm()) ui.CheckAlarms();
+      ui.History();
       break;
     case 2:
-      Config::SetTotalWater(totalWaterAll + (long)totalWater);
-      ui.ShowStatus();
+      if (ui.IsAnyAlarm()) ui.CheckAlarms();
       break;
     case 3:
-      ui.History();
+      Config::SetTotalWater(totalWaterAll + (long)totalWater);
+      ui.ShowStatus();
       break;
     case 4:
       DoSettingsMenu();
@@ -416,6 +433,13 @@ void PressSmartKey()
 
 void PressTopKey()
 {
+  if (IsOk(forceTemp))
+  {
+    forceTemp += 0.5;
+    ui.PingScreenSave();
+    return;
+  }
+
   unsigned long mils = (millis() EXTRA_MILLIS);
   if (mils > 1000ul * 5ul * 60ul)
   {
@@ -433,6 +457,12 @@ void PressTopKey()
 
 void PressBottomKey()
 {
+  if (IsOk(forceTemp))
+  {
+    forceTemp -= 0.5;
+    return;
+  }
+
   unsigned long mils = (millis() EXTRA_MILLIS);
   if (mils > 1000ul * 5ul * 60ul)
   {
@@ -484,7 +514,7 @@ void loop()
   double t1 = sensors->GetTemp(0);
   double t2 = sensors->GetTemp(1);
 
-  if (IsOk(t1) || IsOk(t2))
+  if (IsOk(t1) || IsOk(t2) || IsOk(forceTemp))
   {
     lastGoodTermPeekMillis = mils;
   } else {
@@ -563,7 +593,9 @@ void loop()
     //automatic antifreez mode
     if ((t1 < 3.0 && t1 > -20.0) || (t2 < 3.0 && t2 > -20.0))
     {
-      SetMode(cfg.HalfAutomaticMode ? WmAntiFreezHalfAuto : WmAntiFreez);
+      if (currentMode != HoldRain) {
+        SetMode(cfg.HalfAutomaticMode ? WmAntiFreezHalfAuto : WmAntiFreez);
+      }
     }
   }
 
@@ -582,6 +614,9 @@ void loop()
         break;
       case WmNone:
         valves.SetMode(ValZero);
+        break;
+      case HoldRain:
+        if (sensors->GetHour() >= 12 && sensors->GetHour() < 21) SetMode(WmNone); //12-21 uatoreset
         break;
     }
 
@@ -689,6 +724,19 @@ void CheckAntiFreezMode(double t1, double t2, bool halfAuto)
       }
     }
 
+    if (lastMode == ValZero &&  lastMode != newMode)
+    {
+      Configuration& cfg = Config::Get();
+      if ((cfg.CheckIfSureToOnMinHour > 0) && (sensors->GetHour() > cfg.CheckIfSureToOnMinHour) && (sensors->GetHour() < 12))
+      {
+        if (ui.YesNo(F("Anuluj ochrone?"), true))
+        {
+          SetMode(HoldRain);
+          return;
+        }
+      }
+    }
+
     valves.SetMode(newMode);
     if ((lastMode == Val25 || lastMode == ValAntiFreeze) && valves.CanSetFixedMode())
     {
@@ -697,7 +745,7 @@ void CheckAntiFreezMode(double t1, double t2, bool halfAuto)
 
     if (lastMode != m && m == ValZero)
     {
-      ui.SuccessSnd(sensors->GetTime(),3);
+      ui.SuccessSnd(sensors->GetTime(), 3);
     }
 
     CheckProposeFixeMode(false);

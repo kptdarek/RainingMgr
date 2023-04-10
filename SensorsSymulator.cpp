@@ -64,14 +64,14 @@ SymDef& GestSym(int index)
     
    dynamicHist = true;    
   }
-
+/*
   static SensStep steps1[] =
   { {5.0, 5.2, 9, 240},
     {-6.0, -5.8, 9,80 },
     {4.0, 4.2, 9, 70},
     {-6.0, -5.8, 9,80 },
     {0, 0, 0, 0}
-  };
+  };*/
 
     static SensStep delayFlower[] =
   { {5.0, 5.2, 9, 24},
@@ -108,17 +108,18 @@ const __FlashStringHelper** SensorsSymulator::Titles()
   return titles;
 }
 
-void SensorsSymulator::SetMode(int index, bool realFlow)
+void SensorsSymulator::SetMode(int index, bool realFlow, byte starth)
 {
   SymDef& def = GestSym(index);
   timeFaktor = def.timeFactor;  
+  startHour = starth;
   Steps = def.steps;
   RealFlow = realFlow;
 }
 
 unsigned long SensorsSymulator::GetTime()
 {
-  return 19L * 60L +  ((millis() EXTRA_MILLIS) - StartTime) / timeFaktor;
+  return long(startHour) * 60L +  ((millis() EXTRA_MILLIS) - StartTime) / timeFaktor;
 }
 
 void SensorsSymulator::RequestTemps()

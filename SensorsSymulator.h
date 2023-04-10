@@ -30,11 +30,12 @@ class SensorsSymulator : public SensorsBase
   int smallIndex;
   unsigned long StartTime, LastStepTime;
   int timeFaktor;
+  byte startHour;
  public:
   SensorsSymulator();
   double GetTempFromMode(StaticSymMode mode);
  void Setup();
-  void SetMode(int index, bool realFlow);
+  void SetMode(int index, bool realFlow, byte startHour = 19);
   const __FlashStringHelper* Title(int index);
   const __FlashStringHelper** Titles();
   int Count();

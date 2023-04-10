@@ -18,6 +18,7 @@ class SensorsBase
 
     virtual void AddHour();
     virtual void Add10Min();
+    byte GetHour();
 };
 
 class Sensors : public SensorsBase

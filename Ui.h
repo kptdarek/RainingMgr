@@ -23,7 +23,8 @@ enum WorkMode
   WmNone,
   WmDeleayFolowering,
   WmAntiFreez,
-  WmAntiFreezHalfAuto  
+  WmAntiFreezHalfAuto,
+  HoldRain  
 };
 
 enum Termometr
@@ -98,7 +99,7 @@ class UIMgr
     int Menu(const __FlashStringHelper* title, const __FlashStringHelper* items[], int cnt, int currIndex = 0);
     int SetValue(const __FlashStringHelper* title, int old, int change = 1);
     bool SetValue(const __FlashStringHelper* title, bool old);
-    bool YesNo(const __FlashStringHelper* title);
+    bool YesNo(const __FlashStringHelper* title, bool criticalQuestion = false);
     float SetValue(const __FlashStringHelper* title, float old, float change = 0.1f);
     void Pulse(bool v, WorkMode mode);
     void Print(const __FlashStringHelper* title, byte line = 0);
@@ -146,7 +147,6 @@ class UIMgr
     byte currAlarmIndex(const __FlashStringHelper* title);
     byte GetlastActiveAlarm();
     void checkScreenSave();
-
 };
 
 

@@ -7,6 +7,7 @@
 #define SCREEN_SAVE_DELAY_MINUTS 5
 
 #define MENU_LIVE_LEN 20  //*500ms
+#define MENU_LONG_LIVE_LEN 1200 //10 min
 #define LITER_C char(0)
 #define MENU_TOP_C char(1)
 #define MENU_BOT_C char(2)
@@ -596,9 +597,11 @@ bool  UIMgr::SetValue(const __FlashStringHelper* title, bool old)
 }
 
 
-bool UIMgr::YesNo(const __FlashStringHelper* title)
+bool UIMgr::YesNo(const __FlashStringHelper* title, bool criticalQuestion)
 {
-  int live = MENU_LIVE_LEN;
+  int live = criticalQuestion ? MENU_LONG_LIVE_LEN : MENU_LIVE_LEN;
+  PingScreenSave();
+
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print(title);
@@ -607,8 +610,26 @@ bool UIMgr::YesNo(const __FlashStringHelper* title)
   WaitKeyUp();
   KeybordKeys key = NoneKey;
   do
-  {
-    delay(500);
+  {   
+    if (criticalQuestion) {
+      bool on = (live % 2); 
+      digitalWrite(alarm_led, on ? HIGH : LOW);
+      delay(166);
+      digitalWrite(alarm_led, !on ? HIGH : LOW);
+      delay(166);
+      digitalWrite(alarm_led, on ? HIGH : LOW);
+      delay(166);
+      digitalWrite(alarm_led, LOW);
+      if (live % 60 == 0) {
+        tone(piezo_pin, NOTE_A5 );
+        delay(100); noTone(piezo_pin);
+        delay(100);
+        tone(piezo_pin, NOTE_E5 ); 
+        delay(100);noTone(piezo_pin);        
+      }
+    } else {
+      delay(500);
+    }
     valves->Adjust();
     key = GetPressed();
     if (key == EnterKey)
@@ -826,6 +847,12 @@ void UIMgr::TestLeds()
 
 void UIMgr::ShowMode(WorkMode mode)
 {
+  if (mode == HoldRain)
+  {
+    digitalWrite(frost_raining_led, HIGH); digitalWrite(sun_protect_led, HIGH);
+    return;
+  }
+
   antifrezModeLedOn = mode == WmAntiFreez || mode == WmAntiFreezHalfAuto;
   digitalWrite(frost_raining_led, antifrezModeLedOn ? HIGH : LOW );
 
@@ -1078,36 +1105,36 @@ void UIMgr::PingScreenSave()
 
 void UIMgr::SuccessSnd(unsigned long timeFrom24, int times)
 {
-int h = (timeFrom24 / 60) % 24;
-if ( h < 6 || h > 21) return;
-for(int i=0; i < times; i++)
-{
-  if (i) delay(1000);
-tone(piezo_pin,NOTE_A5 );
-delay(NOTE_SUSTAIN);
-tone(piezo_pin,NOTE_B5);
-delay(NOTE_SUSTAIN);
-tone(piezo_pin,NOTE_C5);
-delay(NOTE_SUSTAIN);
-tone(piezo_pin,NOTE_B5);
-delay(NOTE_SUSTAIN);
-tone(piezo_pin,NOTE_C5);
-delay(NOTE_SUSTAIN);
-tone(piezo_pin,NOTE_D5);
-delay(NOTE_SUSTAIN);
-tone(piezo_pin,NOTE_C5);
-delay(NOTE_SUSTAIN);
-tone(piezo_pin,NOTE_D5);
-delay(NOTE_SUSTAIN);
-tone(piezo_pin,NOTE_E5);
-delay(NOTE_SUSTAIN);
-tone(piezo_pin,NOTE_D5);
-delay(NOTE_SUSTAIN);
-tone(piezo_pin,NOTE_E5);
-delay(NOTE_SUSTAIN);
-tone(piezo_pin,NOTE_E5);
-delay(NOTE_SUSTAIN);
-noTone(piezo_pin);
+  int h = (timeFrom24 / 60) % 24;
+  if ( h < 6 || h > 21) return;
+  for (int i = 0; i < times; i++)
+  {
+    if (i) delay(1000);
+    tone(piezo_pin, NOTE_A5 );
+    delay(NOTE_SUSTAIN);
+    tone(piezo_pin, NOTE_B5);
+    delay(NOTE_SUSTAIN);
+    tone(piezo_pin, NOTE_C5);
+    delay(NOTE_SUSTAIN);
+    tone(piezo_pin, NOTE_B5);
+    delay(NOTE_SUSTAIN);
+    tone(piezo_pin, NOTE_C5);
+    delay(NOTE_SUSTAIN);
+    tone(piezo_pin, NOTE_D5);
+    delay(NOTE_SUSTAIN);
+    tone(piezo_pin, NOTE_C5);
+    delay(NOTE_SUSTAIN);
+    tone(piezo_pin, NOTE_D5);
+    delay(NOTE_SUSTAIN);
+    tone(piezo_pin, NOTE_E5);
+    delay(NOTE_SUSTAIN);
+    tone(piezo_pin, NOTE_D5);
+    delay(NOTE_SUSTAIN);
+    tone(piezo_pin, NOTE_E5);
+    delay(NOTE_SUSTAIN);
+    tone(piezo_pin, NOTE_E5);
+    delay(NOTE_SUSTAIN);
+    noTone(piezo_pin);
 
-}
+  }
 }

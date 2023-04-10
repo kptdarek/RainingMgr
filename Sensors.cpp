@@ -12,7 +12,7 @@ Sensors::Sensors(): oneWire(one_wire), tsensors(&oneWire)
 void Sensors::Setup()
 {
   tsensors.begin();                           //rozpocznij odczyt z czujnika
- 
+
 }
 
 unsigned long Sensors::GetTime()
@@ -53,12 +53,19 @@ byte  Sensors::GetFlow()
 }
 SensorsBase::SensorsBase()
 {
- flow = 0;
- }
+  flow = 0;
+}
+
+byte SensorsBase::GetHour()
+{
+  unsigned long mins = GetTime();
+  return (mins / 60) % 24;
+}
 
 void  SensorsBase::AddHour()
 {
 }
+
 void  SensorsBase::Add10Min()
 {
 }
@@ -68,9 +75,9 @@ void SensorsBase::RequestTemps()
 }
 
 void SensorsBase::SetFlowPulses(int cnt, int interval)
-{  Configuration& cfg = Config::Get();
+{ Configuration& cfg = Config::Get();
   double pulsPerSeconds = double(cnt) / double(interval) * 1000.0f;
   double fd = (pulsPerSeconds / cfg.flowFactor) + 0.5f; //chcemy srednią
   int f = (int)(fd);
   flow = f > 254 ? 254 : (byte)f;
-  }
+}

@@ -20,6 +20,7 @@ byte sensorInterrupt = 0;  // 0 = digital pin 2
 byte sensorPin       = 2;
 int pulseCount = 0;
 double totalWater = 0.0;
+double totalMinuts = 0.0;
 long  totalWaterAll = 0;
 byte saveEepromCounter = 0;
 bool proposeFixedMode = false;
@@ -308,7 +309,7 @@ void ClearHistory()
 
   totalWaterAll = totalWaterAll + (long)totalWater;
   Config::SetTotalWater(totalWaterAll);
-  totalWater = 0.0;
+  totalMinuts = totalWater = 0.0;
   ui.SuccessSnd(sensors->GetTime());
 }
 
@@ -549,7 +550,10 @@ void loop()
 
       unsigned long secs = (mils - lastChekAvrFlowMillis) / 1000L;
       totalWater += (double)((double)avrFlowSum / (double)avrFlowSamples) * ((double)secs / 60.0f);
-
+      if (valves.PowerInMode() != 0 && valves.PowerInMode() != VALES_0FIX)
+      {
+        totalMinuts += ((double)secs / 60.0f);
+      }
 
       if (saveEepromCounter >= 15 ) // 15 x 4 min
       {

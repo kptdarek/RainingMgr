@@ -27,6 +27,7 @@
 #define NOTE_B5  988
 
 extern double totalWater;
+extern double totalMinuts;
 extern byte saveEepromCounter;
 
 
@@ -1018,7 +1019,7 @@ void UIMgr::ShowStatus()
 
 
   lcd.setCursor(0, 1);
-  lcd.print((millis() EXTRA_MILLIS) / 1000 / 60 / 60);
+  lcd.print(totalMinuts/ 60.0f,1);
   lcd.print(F("h"));
 
   lcd.print(F(" "));
@@ -1106,7 +1107,7 @@ void UIMgr::PingScreenSave()
 void UIMgr::SuccessSnd(unsigned long timeFrom24, int times)
 {
   int h = (timeFrom24 / 60) % 24;
-  if ( h < 6 || h > 21) return;
+  if ( h < 6 || h > 20) return;
   for (int i = 0; i < times; i++)
   {
     if (i) delay(1000);
